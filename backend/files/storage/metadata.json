@@ -1,1 +1,116 @@
-{}
+{
+  "4560be77-257e-4e0f-9867-fb2c0a6fb24b": {
+    "file_id": "4560be77-257e-4e0f-9867-fb2c0a6fb24b",
+    "filename": "test_document.txt",
+    "content_type": "text/plain",
+    "file_size": 56,
+    "encrypted_size": 84,
+    "sha256_hash": "397b435ed7dc843b673be4ee4d428c63ceae44355c366ca17df10f3fadfb5aee",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-20T06:33:54.218666+00:00",
+    "description": "End-to-end upload test",
+    "status": "deleted",
+    "deleted_at": "2026-08-20T06:33:54.259832+00:00"
+  },
+  "c43ee708-efc5-451b-9454-659856f19537": {
+    "file_id": "c43ee708-efc5-451b-9454-659856f19537",
+    "filename": "test_document.txt",
+    "content_type": "text/plain",
+    "file_size": 56,
+    "encrypted_size": 84,
+    "sha256_hash": "397b435ed7dc843b673be4ee4d428c63ceae44355c366ca17df10f3fadfb5aee",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-20T06:37:58.252652+00:00",
+    "description": "End-to-end upload test",
+    "status": "deleted",
+    "deleted_at": "2026-08-20T06:37:58.315145+00:00"
+  },
+  "bbc5a93f-75b2-496e-83ca-67e5042793e5": {
+    "file_id": "bbc5a93f-75b2-496e-83ca-67e5042793e5",
+    "filename": "test_document.txt",
+    "content_type": "text/plain",
+    "file_size": 56,
+    "encrypted_size": 84,
+    "sha256_hash": "397b435ed7dc843b673be4ee4d428c63ceae44355c366ca17df10f3fadfb5aee",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-20T06:38:40.669671+00:00",
+    "description": "End-to-end upload test",
+    "status": "deleted",
+    "deleted_at": "2026-08-20T06:38:40.732206+00:00"
+  },
+  "d608d3b3-2ab4-47c1-8173-4a2e6dde6d13": {
+    "file_id": "d608d3b3-2ab4-47c1-8173-4a2e6dde6d13",
+    "filename": "test_document.txt",
+    "content_type": "text/plain",
+    "file_size": 56,
+    "encrypted_size": 84,
+    "sha256_hash": "397b435ed7dc843b673be4ee4d428c63ceae44355c366ca17df10f3fadfb5aee",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-20T06:39:23.656847+00:00",
+    "description": "End-to-end upload test",
+    "status": "deleted",
+    "deleted_at": "2026-08-20T06:39:23.710874+00:00"
+  },
+  "d8a25781-222b-47c0-88e5-5ebbc909ff31": {
+    "file_id": "d8a25781-222b-47c0-88e5-5ebbc909ff31",
+    "filename": "Immersive Camera-389-1-1781041175.zip",
+    "content_type": "application/x-zip-compressed",
+    "file_size": 26326,
+    "encrypted_size": 26354,
+    "sha256_hash": "a449973fd58186b5f43a4331d5f26ce13838730d9cff12011034a8f65f82d9b8",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-20T08:42:56.779495+00:00",
+    "description": "",
+    "status": "active"
+  },
+  "500787e9-45a5-4b76-9a8f-670ee3e04a16": {
+    "file_id": "500787e9-45a5-4b76-9a8f-670ee3e04a16",
+    "filename": "Immersive Camera-389-1-1781041175.zip",
+    "content_type": "application/x-zip-compressed",
+    "file_size": 26326,
+    "encrypted_size": 26354,
+    "sha256_hash": "a449973fd58186b5f43a4331d5f26ce13838730d9cff12011034a8f65f82d9b8",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-20T08:47:44.946228+00:00",
+    "description": "",
+    "status": "active"
+  },
+  "38cbd1b8-50d2-4e00-987c-2d10033ba0ba": {
+    "file_id": "38cbd1b8-50d2-4e00-987c-2d10033ba0ba",
+    "filename": "Untitled document.pdf",
+    "content_type": "application/pdf",
+    "file_size": 83060,
+    "encrypted_size": 83088,
+    "sha256_hash": "bd316ecdfa3106692eada9aa9a1635251abdf865262b6ecdd5771aef9f4863b5",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-21T04:21:37.102370+00:00",
+    "description": "",
+    "status": "active"
+  },
+  "bed595eb-11f9-414e-9f53-33b4afa88126": {
+    "file_id": "bed595eb-11f9-414e-9f53-33b4afa88126",
+    "filename": "test_document.txt",
+    "content_type": "text/plain",
+    "file_size": 56,
+    "encrypted_size": 84,
+    "sha256_hash": "397b435ed7dc843b673be4ee4d428c63ceae44355c366ca17df10f3fadfb5aee",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-21T04:44:07.126205+00:00",
+    "description": "End-to-end upload test",
+    "status": "deleted",
+    "deleted_at": "2026-08-21T04:44:07.182092+00:00"
+  },
+  "2c7c1fbc-08af-4a13-ad5d-c86f2692eab1": {
+    "file_id": "2c7c1fbc-08af-4a13-ad5d-c86f2692eab1",
+    "filename": "test_document.txt",
+    "content_type": "text/plain",
+    "file_size": 56,
+    "encrypted_size": 84,
+    "sha256_hash": "397b435ed7dc843b673be4ee4d428c63ceae44355c366ca17df10f3fadfb5aee",
+    "encryption_algorithm": "AES-256-GCM",
+    "uploaded_at": "2026-08-22T05:50:28.212806+00:00",
+    "description": "End-to-end upload test",
+    "status": "deleted",
+    "deleted_at": "2026-08-22T05:50:28.278382+00:00"
+  }
+}

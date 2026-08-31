@@ -26,9 +26,25 @@ if _analyzer_dir not in sys.path:
 try:
     from .parser import LogParser  # type: ignore[missing-import] # pyrefly: ignore
     from .detector import LogAnalyzer  # type: ignore[missing-import] # pyrefly: ignore
+    from .mock_generator import (  # type: ignore[missing-import] # pyrefly: ignore
+        generate_brute_force_scenario,
+        generate_credential_stuffing_scenario,
+        generate_path_traversal_scenario,
+        generate_sqli_scenario,
+        generate_mixed_scenario,
+        resolve_log_path,
+    )
 except (ImportError, ValueError):
     from parser import LogParser  # type: ignore[missing-import] # pyrefly: ignore
     from detector import LogAnalyzer  # type: ignore[missing-import] # pyrefly: ignore
+    from mock_generator import (  # type: ignore[missing-import] # pyrefly: ignore
+        generate_brute_force_scenario,
+        generate_credential_stuffing_scenario,
+        generate_path_traversal_scenario,
+        generate_sqli_scenario,
+        generate_mixed_scenario,
+        resolve_log_path,
+    )
 
 
 class AnalyzerAPIHandler(BaseHTTPRequestHandler):
@@ -214,6 +230,64 @@ class AnalyzerAPIHandler(BaseHTTPRequestHandler):
                     "message": f"Successfully analyzed {len(entries)} log entries. Identified {len(alerts)} alerts.",
                     "total_alerts": len(alerts),
                     "summary": stats["summary"]
+                })
+                return
+
+            if path in ("/api/simulate", "/simulate"):
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = {}
+                if content_length > 0:
+                    try:
+                        raw_body = self.rfile.read(content_length)
+                        body = json.loads(raw_body.decode("utf-8"))
+                    except Exception:
+                        body = {}
+
+                attack_type = body.get("attack_type", "all").lower()
+                target_path = self.log_file_path or self.analyzer.parser.default_log_path
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                now = datetime.now(timezone.utc)
+
+                lines_to_write = []
+                if attack_type == "brute_force":
+                    lines_to_write = generate_brute_force_scenario(now, attacker_ip="198.51.100.42", target_user="admin", attempts=8)
+                elif attack_type == "sqli":
+                    lines_to_write = generate_sqli_scenario(now, attacker_ip="198.51.100.99")
+                elif attack_type == "credential_stuffing":
+                    lines_to_write = generate_credential_stuffing_scenario(now, attacker_ip="203.0.113.88")
+                elif attack_type == "path_traversal":
+                    lines_to_write = generate_path_traversal_scenario(now, attacker_ip="198.51.100.77")
+                else:  # "all" or mixed
+                    lines_to_write = generate_mixed_scenario(now)
+
+                with open(target_path, "a", encoding="utf-8") as f:
+                    for line in lines_to_write:
+                        f.write(line)
+
+                # Re-analyze immediately
+                entries = self.analyzer.parser.parse_file(target_path)
+                alerts = self.analyzer.analyze(entries)
+                stats = self.analyzer.get_statistics(entries, alerts)
+
+                self._send_json({
+                    "status": "success",
+                    "simulated_attack": attack_type,
+                    "injected_logs_count": len(lines_to_write),
+                    "total_alerts": len(alerts),
+                    "message": f"Successfully injected {len(lines_to_write)} simulated attack logs for '{attack_type.upper()}'. Threat engine identified {len(alerts)} total alerts.",
+                    "summary": stats["summary"]
+                })
+                return
+
+            if path in ("/api/clear-logs", "/clear-logs"):
+                target_path = self.log_file_path or self.analyzer.parser.default_log_path
+                with open(target_path, "w", encoding="utf-8") as f:
+                    f.write("")
+
+                self._send_json({
+                    "status": "success",
+                    "message": "Access logs cleared successfully. Threat Engine reset.",
+                    "total_alerts": 0
                 })
                 return
 

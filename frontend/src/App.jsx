@@ -11,6 +11,7 @@ import MyFiles from "./pages/MyFiles";
 import UploadFile from "./pages/UploadFile";
 import SharedFiles from "./pages/SharedFiles";
 import Activity from "./pages/Activity";
+import ThreatCenter from "./pages/ThreatCenter";
 
 function Layout({ children }) {
   return (
@@ -46,6 +47,16 @@ function App() {
           element={
             <Layout>
               <Dashboard />
+            </Layout>
+          }
+        />
+
+        {/* Threats & Vulnerability Center */}
+        <Route
+          path="/threats"
+          element={
+            <Layout>
+              <ThreatCenter />
             </Layout>
           }
         />

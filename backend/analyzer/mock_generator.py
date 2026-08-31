@@ -95,6 +95,53 @@ def generate_credential_stuffing_scenario(base_time: datetime, attacker_ip: str 
     return logs
 
 
+def generate_path_traversal_scenario(base_time: datetime, attacker_ip: str = "198.51.100.77") -> List[str]:
+    """Generate path traversal probe logs."""
+    logs = []
+    probes = [
+        ("GET", "/api/files/download?path=../../../../etc/passwd", 400, "Blocked directory traversal attempt"),
+        ("GET", "/.env", 404, "Attempted access to sensitive configuration file"),
+        ("GET", "/.git/config", 404, "Attempted access to git repository metadata"),
+        ("GET", "/api/files/view?file=..%2f..%2f..%2fetc%2fshadow", 400, "Encoded traversal blocked"),
+    ]
+    for i, (m, ep, code, msg) in enumerate(probes):
+        ts = base_time + timedelta(seconds=i * 5)
+        logs.append(format_log(
+            timestamp=ts,
+            ip=attacker_ip,
+            method=m,
+            endpoint=ep,
+            status_code=code,
+            user="anonymous",
+            message=msg,
+            user_agent="Nikto/2.1.6 (Security Scanner)"
+        ))
+    return logs
+
+
+def generate_sqli_scenario(base_time: datetime, attacker_ip: str = "198.51.100.99") -> List[str]:
+    """Generate SQL injection probe logs."""
+    logs = []
+    probes = [
+        ("POST", "/api/auth/login", 400, "SQL Injection attempt: ' OR '1'='1"),
+        ("GET", "/api/files/search?query=1%20UNION%20SELECT%20null,username,password%20FROM%20users", 400, "SQL Injection payload: UNION SELECT"),
+        ("POST", "/api/auth/token", 400, "SQL Injection attempt: admin' --"),
+    ]
+    for i, (m, ep, code, msg) in enumerate(probes):
+        ts = base_time + timedelta(seconds=i * 6)
+        logs.append(format_log(
+            timestamp=ts,
+            ip=attacker_ip,
+            method=m,
+            endpoint=ep,
+            status_code=code,
+            user="anonymous",
+            message=msg,
+            user_agent="sqlmap/1.7.2#stable"
+        ))
+    return logs
+
+
 def generate_web_probe_scenario(base_time: datetime, attacker_ip: str = "198.51.100.99") -> List[str]:
     """Generate directory traversal and web vulnerability probe signatures."""
     logs = []

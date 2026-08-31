@@ -12,7 +12,10 @@ import threading
 from datetime import datetime, timezone
 from typing import Optional, Tuple, List, Dict, Any
 
-from .crypto import FileEncryptor, CryptoError, IntegrityVerificationError, DecryptionError
+try:
+    from .crypto import FileEncryptor, CryptoError, IntegrityVerificationError, DecryptionError
+except (ImportError, ValueError):
+    from crypto import FileEncryptor, CryptoError, IntegrityVerificationError, DecryptionError
 
 
 class StorageError(Exception):

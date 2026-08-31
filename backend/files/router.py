@@ -6,12 +6,16 @@ and SHA-256 cryptographic integrity verification.
 """
 
 from typing import Optional, List
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status, Response
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
-from .storage_manager import FileStorageManager, FileNotFoundStorageError, StorageError
-from .crypto import IntegrityVerificationError, DecryptionError, CryptoError
+try:
+    from .storage_manager import FileStorageManager, FileNotFoundStorageError, StorageError
+    from .crypto import IntegrityVerificationError, DecryptionError, CryptoError
+except (ImportError, ValueError):
+    from storage_manager import FileStorageManager, FileNotFoundStorageError, StorageError
+    from crypto import IntegrityVerificationError, DecryptionError, CryptoError
 
 # Default storage manager instance for the router
 storage_manager = FileStorageManager()

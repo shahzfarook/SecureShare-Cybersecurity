@@ -150,16 +150,42 @@ class LogParser:
         if raw_line.startswith("{") and raw_line.endswith("}"):
             try:
                 data = json.loads(raw_line)
-                ts = self._parse_timestamp(str(data.get("timestamp", "")))
+                ts_raw = data.get("timestamp", data.get("Timestamp", ""))
+                ts = self._parse_timestamp(str(ts_raw))
+                
+                ip = str(data.get("ip", data.get("IP", "unknown")))
+                method = str(data.get("method", data.get("Method", "GET"))).upper()
+                endpoint = str(data.get("endpoint", data.get("Endpoint", "/")))
+                
+                # Resolve status code robustly
+                raw_sc = data.get("status_code", data.get("StatusCode", data.get("status", data.get("Status", 200))))
+                if isinstance(raw_sc, int):
+                    status_code = raw_sc
+                elif isinstance(raw_sc, str) and raw_sc.isdigit():
+                    status_code = int(raw_sc)
+                elif str(raw_sc).strip().upper() in ("FAIL", "FAILED", "ERROR", "UNAUTHORIZED"):
+                    status_code = 401
+                elif str(raw_sc).strip().upper() in ("SUCCESS", "OK"):
+                    status_code = 200
+                else:
+                    try:
+                        status_code = int(raw_sc)
+                    except (ValueError, TypeError):
+                        status_code = 200
+
+                user = str(data.get("user", data.get("username", data.get("Username", "anonymous"))))
+                message = str(data.get("message", data.get("Message", data.get("msg", data.get("MSG", "")))))
+                user_agent = str(data.get("user_agent", data.get("UserAgent", data.get("ua", "-"))))
+
                 return LogEntry(
                     timestamp=ts,
-                    ip=str(data.get("ip", "unknown")),
-                    method=str(data.get("method", "GET")).upper(),
-                    endpoint=str(data.get("endpoint", "/")),
-                    status_code=int(data.get("status_code", data.get("status", 200))),
-                    user=str(data.get("user", data.get("username", "anonymous"))),
-                    message=str(data.get("message", data.get("msg", ""))),
-                    user_agent=str(data.get("user_agent", data.get("ua", "-"))),
+                    ip=ip,
+                    method=method,
+                    endpoint=endpoint,
+                    status_code=status_code,
+                    user=user,
+                    message=message,
+                    user_agent=user_agent,
                     raw=raw_line
                 )
             except Exception:

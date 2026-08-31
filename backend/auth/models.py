@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from enum import Enum
 import re
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class UserRole(str, Enum):
@@ -67,9 +67,7 @@ class UserResponse(BaseModel):
     role: UserRole
     is_active: bool = True
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenResponse(BaseModel):

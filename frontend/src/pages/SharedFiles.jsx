@@ -1,8 +1,107 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+
 function SharedFiles() {
+  const [files, setFiles] = useState([]);
+  const [copiedId, setCopiedId] = useState(null);
+
+  useEffect(() => {
+    const fetchFiles = async () => {
+      try {
+        const res = await axios.get("http://localhost:8001/api/files/list");
+        setFiles(res.data);
+      } catch (e) {
+        console.log("Failed to load files:", e.message);
+      }
+    };
+    fetchFiles();
+  }, []);
+
+  const handleCopyLink = (fileId) => {
+    const downloadUrl = `http://localhost:8001/api/files/download/${fileId}`;
+    navigator.clipboard.writeText(downloadUrl);
+    setCopiedId(fileId);
+    setTimeout(() => setCopiedId(null), 2500);
+  };
+
   return (
-    <div>
-      <h1>Shared Files</h1>
-      <p>Files shared with you will appear here.</p>
+    <div className="shared-page">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Encrypted File Sharing & Distribution</h1>
+          <p className="page-subtitle">Generate secure direct download links with automated SHA-256 tamper verification</p>
+        </div>
+      </div>
+
+      <div className="card-section">
+        <div className="section-header">
+          <div className="section-title">
+            <span>🔗</span>
+            <span>Shareable Encrypted Vault Links</span>
+          </div>
+        </div>
+
+        {files.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "var(--text-secondary)" }}>
+            No files available for sharing. Upload a file first in <strong>Upload File</strong>.
+          </div>
+        ) : (
+          <div className="cyber-table-wrapper">
+            <table className="cyber-table">
+              <thead>
+                <tr>
+                  <th>File Name</th>
+                  <th>Encryption & Integrity</th>
+                  <th>Direct Download Link</th>
+                  <th style={{ textAlign: "right" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {files.map((file) => (
+                  <tr key={file.file_id}>
+                    <td>
+                      <div style={{ fontWeight: "700", color: "#fff" }}>📄 {file.filename}</div>
+                      <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
+                        {(file.file_size / 1024).toFixed(1)} KB • Uploaded {new Date(file.uploaded_at).toLocaleDateString()}
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="badge-tag badge-success" style={{ marginRight: "8px" }}>
+                        AES-256-GCM
+                      </span>
+                      <span className="hash-cell" style={{ fontSize: "11px" }}>
+                        SHA-256: {file.sha256_hash?.slice(0, 10)}...
+                      </span>
+                    </td>
+
+                    <td>
+                      <input
+                        type="text"
+                        readOnly
+                        value={`http://localhost:8001/api/files/download/${file.file_id}`}
+                        className="cyber-input"
+                        style={{ fontSize: "12px", padding: "6px 10px", color: "var(--accent-cyan)", width: "340px" }}
+                        onClick={(e) => e.target.select()}
+                      />
+                    </td>
+
+                    <td style={{ textAlign: "right" }}>
+                      <button
+                        className="btn-primary"
+                        style={{ padding: "7px 14px", fontSize: "12px" }}
+                        onClick={() => handleCopyLink(file.file_id)}
+                      >
+                        {copiedId === file.file_id ? "✓ Link Copied!" : "📋 Copy Link"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
