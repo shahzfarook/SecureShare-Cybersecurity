@@ -1,0 +1,29 @@
+{
+  "name": "secureshare-cybersecurity",
+  "version": "1.0.0",
+  "description": "SecureShare - Zero-Knowledge Secure File Sharing & Real-Time Cybersecurity Threat Analyzer",
+  "scripts": {
+    "setup": "npm --prefix backend/auth install && npm --prefix frontend install",
+    "test:analyzer": "python3 backend/analyzer/test_analyzer.py",
+    "test:integration": "python3 -m unittest test_system_integration.py -v",
+    "test:auth": "npm --prefix backend/auth test",
+    "test:frontend": "npm --prefix frontend test",
+    "test": "npm run test:analyzer && npm run test:integration && npm run test:auth && npm run test:frontend",
+    "start:auth": "node backend/auth/server.js",
+    "start:analyzer": "python3 backend/analyzer/server.py --port 5001",
+    "start:frontend": "npm --prefix frontend run dev",
+    "start": "node dev.js",
+    "dev": "node dev.js",
+    "mock:logs": "python3 backend/analyzer/mock_generator.py --scenario mixed --count 60"
+  },
+  "keywords": [
+    "cybersecurity",
+    "threat-detection",
+    "log-analyzer",
+    "brute-force",
+    "auth",
+    "encryption"
+  ],
+  "author": "SecureShare Team (Anfas, Anuraj, Shahz)",
+  "license": "ISC"
+}

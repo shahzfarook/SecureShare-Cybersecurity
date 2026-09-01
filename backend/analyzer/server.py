@@ -301,10 +301,13 @@ class AnalyzerAPIHandler(BaseHTTPRequestHandler):
         return
 
 
+DEFAULT_ANALYZER_PORT = int(os.environ.get("ANALYZER_PORT", "5001"))
+
+
 class LogAnalyzerServer:
     """Multi-threaded REST API server for Log Analyzer."""
 
-    def __init__(self, host: str = "0.0.0.0", port: int = 5000, log_file: Optional[str] = None):
+    def __init__(self, host: str = "0.0.0.0", port: int = DEFAULT_ANALYZER_PORT, log_file: Optional[str] = None):
         self.host = host
         self.port = port
         self.log_file = log_file
@@ -331,7 +334,7 @@ class LogAnalyzerServer:
         self.httpd.server_close()
 
 
-def run_server(host: str = "0.0.0.0", port: int = 5000, log_file: Optional[str] = None):
+def run_server(host: str = "0.0.0.0", port: int = DEFAULT_ANALYZER_PORT, log_file: Optional[str] = None):
     """Convenience function to run the server."""
     server = LogAnalyzerServer(host=host, port=port, log_file=log_file)
     server.start()
@@ -340,9 +343,10 @@ def run_server(host: str = "0.0.0.0", port: int = 5000, log_file: Optional[str] 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="SecureShare Cybersecurity Log Analyzer API Server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host address to bind (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=5000, help="Port to listen on (default: 5000)")
+    parser.add_argument("--host", default=os.environ.get("HOST", "0.0.0.0"), help="Host address to bind (default: 0.0.0.0)")
+    parser.add_argument("--port", type=int, default=DEFAULT_ANALYZER_PORT, help=f"Port to listen on (default: {DEFAULT_ANALYZER_PORT})")
     parser.add_argument("--log-file", help="Custom path to access log file")
     args = parser.parse_args()
 
     run_server(host=args.host, port=args.port, log_file=args.log_file)
+
