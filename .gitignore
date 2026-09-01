@@ -6,3 +6,7 @@ logs/
 dist/
 build/
 *.log
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store

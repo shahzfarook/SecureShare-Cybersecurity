@@ -90,6 +90,28 @@ class TestLogParser(unittest.TestCase):
         self.assertIsNone(self.parser.parse_line("   "))
         self.assertIsNone(self.parser.parse_line("# This is a comment"))
 
+    def test_parse_auth_audit_logger_entries(self):
+        """Test parsing of live audit log entries produced by backend/auth/utils/auditLogger.js."""
+        success_line = '[2026-08-31T10:30:15Z] IP="127.0.0.1" METHOD="POST" ENDPOINT="/api/auth/login" STATUS=200 USER="shahz" MSG="Login successful: Session established" USER_AGENT="Mozilla/5.0"\n'
+        fail_line = '[2026-08-31T10:30:16Z] IP="198.51.100.55" METHOD="POST" ENDPOINT="/api/auth/login" STATUS=401 USER="admin" MSG="Login failed: Invalid credentials provided" USER_AGENT="curl/8.5"\n'
+        forbidden_line = '[2026-08-31T10:30:17Z] IP="198.51.100.55" METHOD="GET" ENDPOINT="/api/auth/admin" STATUS=403 USER="user1" MSG="Forbidden: Admin access required" USER_AGENT="Browser/1.0"\n'
+
+        e_success = self.parser.parse_line(success_line)
+        self.assertIsNotNone(e_success)
+        self.assertEqual(e_success.status_code, 200)
+        self.assertTrue(e_success.is_successful_login())
+        self.assertFalse(e_success.is_failed_login())
+
+        e_fail = self.parser.parse_line(fail_line)
+        self.assertIsNotNone(e_fail)
+        self.assertEqual(e_fail.status_code, 401)
+        self.assertTrue(e_fail.is_failed_login())
+        self.assertFalse(e_fail.is_successful_login())
+
+        e_forbidden = self.parser.parse_line(forbidden_line)
+        self.assertIsNotNone(e_forbidden)
+        self.assertEqual(e_forbidden.status_code, 403)
+
     def test_parse_file_gracefully_handles_missing(self):
         non_existent = "/tmp/does_not_exist_secureshare_12345.log"
         entries = self.parser.parse_file(non_existent)
