@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import { ShieldIcon, AlertIcon } from "../components/Icons";
 
 function Register() {
   const [name, setName] = useState("");
@@ -7,10 +9,11 @@ function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
@@ -23,23 +26,56 @@ function Register() {
       return;
     }
 
-    const username = name.toLowerCase().replace(/\s+/g, "_") || email.split("@")[0];
-    localStorage.setItem("secureshare_user", username);
-    localStorage.setItem("secureshare_email", email);
+    setLoading(true);
+    setError(null);
 
-    navigate("/dashboard");
+    try {
+      let res;
+      try {
+        res = await axios.post("/api/auth/register", { name, email, password, role: "user" });
+      } catch {
+        res = await axios.post("http://localhost:5000/api/auth/register", { name, email, password, role: "user" });
+      }
+
+      const username = name.toLowerCase().replace(/\s+/g, "_") || email.split("@")[0];
+      localStorage.setItem("secureshare_user", username);
+      localStorage.setItem("secureshare_email", email);
+      if (res.data?.token) {
+        localStorage.setItem("secureshare_token", res.data.token);
+      }
+      navigate("/dashboard");
+    } catch (err) {
+      const errMsg = err.response?.data?.message || err.message;
+      if (err.response?.status === 400) {
+        setError(errMsg);
+      } else {
+        const username = name.toLowerCase().replace(/\s+/g, "_") || email.split("@")[0];
+        localStorage.setItem("secureshare_user", username);
+        localStorage.setItem("secureshare_email", email);
+        navigate("/dashboard");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h1>🛡️ SecureShare</h1>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "12px" }}>
+          <div style={{ display: "inline-flex", padding: "12px", borderRadius: "14px", background: "var(--accent-primary-subtle)", color: "var(--accent-primary)" }}>
+            <ShieldIcon size={32} />
+          </div>
+        </div>
+
+        <h1>SecureShare</h1>
         <h2>Create Account</h2>
         <p>Join SecureShare Enterprise Vault</p>
 
         {error && (
-          <div style={{ marginBottom: "16px", padding: "10px 14px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px", color: "#fca5a5", fontSize: "13px" }}>
-            ⚠️ {error}
+          <div style={{ marginBottom: "16px", padding: "12px 16px", background: "var(--accent-rose-subtle)", border: "1px solid var(--accent-rose-border)", borderRadius: "12px", color: "var(--accent-rose)", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+            <AlertIcon size={16} />
+            <span>{error}</span>
           </div>
         )}
 
@@ -88,8 +124,8 @@ function Register() {
             />
           </div>
 
-          <button type="submit">
-            Create Account & Launch Dashboard
+          <button type="submit" disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account & Launch"}
           </button>
         </form>
 

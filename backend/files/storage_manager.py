@@ -41,9 +41,11 @@ class FileStorageManager:
         Defaults to backend/files/storage/ directory.
         """
         if storage_dir is None:
-            # Default to backend/files/storage/
+            # Default to backend/uploads/ directory
             base_dir = os.path.dirname(os.path.abspath(__file__))
-            self.storage_dir = os.path.join(base_dir, "storage")
+            backend_dir = os.path.dirname(base_dir)
+            uploads_dir = os.path.join(backend_dir, "uploads")
+            self.storage_dir = os.environ.get("STORAGE_DIR", uploads_dir)
         else:
             self.storage_dir = os.path.abspath(storage_dir)
 

@@ -2,9 +2,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const os = require("node:os");
 const http = require("node:http");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+
+const TEST_LOG_FILE = path.join(os.tmpdir(), `test_auth_audit_${Date.now()}.log`);
+process.env.AUDIT_LOG_FILE = TEST_LOG_FILE;
 
 const app = require("../server");
 const {

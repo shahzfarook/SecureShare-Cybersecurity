@@ -60,19 +60,30 @@ const register = async (req, res) => {
 // LOGIN
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, username, password } = req.body;
+        const userIdentifier = email || username;
 
-        if (!email || !password) {
-            logLoginFailure(req, email || "anonymous", "Missing credentials");
+        if (!userIdentifier || !password) {
+            logLoginFailure(req, userIdentifier || "anonymous", "Missing credentials");
             return res.status(400).json({
-                message: "Email and password are required"
+                message: "Email/username and password are required"
             });
         }
 
-        const user = await User.findOne({ email });
+        let user = await User.findOne({ email: userIdentifier });
+        if (!user && username) {
+            user = await User.findOne({ username: userIdentifier });
+        }
+        if (!user && userIdentifier.includes("@")) {
+            user = await User.findOne({ email: userIdentifier });
+        }
+        if (!user) {
+            // Check standalone fallback
+            user = User.getSeededUser && User.getSeededUser(userIdentifier);
+        }
 
         if (!user) {
-            logLoginFailure(req, email, `User '${email}' not found`);
+            logLoginFailure(req, userIdentifier, `User '${userIdentifier}' not found`);
             return res.status(401).json({
                 message: "Invalid email or password"
             });

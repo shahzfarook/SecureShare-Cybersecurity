@@ -9,48 +9,78 @@ Provides:
 - Exportable FastAPI APIRouter (auth_router / router)
 """
 
-from .config import (
-    SECRET_KEY,
-    ALGORITHM,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    LOG_FILE_PATH,
-)
-from .models import (
-    UserRole,
-    UserRegisterRequest,
-    UserLoginRequest,
-    UserResponse,
-    TokenResponse,
-    TokenPayload,
-    RoleUpdateRequest,
-    LoginAttemptLog,
-)
-from .security import (
-    hash_password,
-    verify_password,
-    create_access_token,
-    create_refresh_token,
-    decode_token,
-)
-from .logger import (
-    log_login_attempt,
-)
-from .storage import (
-    user_repository,
-    UserRepository,
-    UserRecord,
-)
-from .dependencies import (
-    get_current_user,
-    require_admin,
-    require_user,
-    RoleChecker,
-    get_client_ip,
-)
-from .router import (
-    auth_router,
-    router,
-)
+try:
+    from .config import (
+        SECRET_KEY,
+        ALGORITHM,
+        ACCESS_TOKEN_EXPIRE_MINUTES,
+        LOG_FILE_PATH,
+    )
+    from .models import (
+        UserRole,
+        UserRegisterRequest,
+        UserLoginRequest,
+        UserResponse,
+        TokenResponse,
+        TokenPayload,
+        RoleUpdateRequest,
+        LoginAttemptLog,
+    )
+    from .security import (
+        hash_password,
+        verify_password,
+        create_access_token,
+        create_refresh_token,
+        decode_token,
+    )
+    from .logger import (
+        log_login_attempt,
+    )
+    from .storage import (
+        user_repository,
+        UserRepository,
+        UserRecord,
+    )
+    from .dependencies import (
+        get_current_user,
+        require_admin,
+        require_user,
+        RoleChecker,
+        get_client_ip,
+    )
+    from .router import (
+        auth_router,
+        router,
+    )
+except ImportError:
+    SECRET_KEY = None
+    ALGORITHM = None
+    ACCESS_TOKEN_EXPIRE_MINUTES = None
+    LOG_FILE_PATH = None
+    UserRole = None
+    UserRegisterRequest = None
+    UserLoginRequest = None
+    UserResponse = None
+    TokenResponse = None
+    TokenPayload = None
+    RoleUpdateRequest = None
+    LoginAttemptLog = None
+    hash_password = None
+    verify_password = None
+    create_access_token = None
+    create_refresh_token = None
+    decode_token = None
+    log_login_attempt = None
+    user_repository = None
+    UserRepository = None
+    UserRecord = None
+    get_current_user = None
+    require_admin = None
+    require_user = None
+    RoleChecker = None
+    get_client_ip = None
+    auth_router = None
+    router = None
 
 __all__ = [
     # Router

@@ -15,15 +15,26 @@ from .storage_manager import (
     StorageError,
     FileNotFoundStorageError
 )
-from .router import (
-    router,
-    storage_manager,
-    FileUploadResponse,
-    FileInfoResponse,
-    IntegrityVerificationResponse,
-    StorageStatsResponse
-)
-from .server import create_app, app
+
+try:
+    from .router import (
+        router,
+        storage_manager,
+        FileUploadResponse,
+        FileInfoResponse,
+        IntegrityVerificationResponse,
+        StorageStatsResponse
+    )
+    from .server import create_app, app
+except ImportError:
+    router = None
+    storage_manager = None
+    FileUploadResponse = None
+    FileInfoResponse = None
+    IntegrityVerificationResponse = None
+    StorageStatsResponse = None
+    create_app = None
+    app = None
 
 __all__ = [
     "router",

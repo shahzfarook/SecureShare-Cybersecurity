@@ -11,6 +11,10 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true
       },
+      '/api/files': {
+        target: 'http://localhost:8001',
+        changeOrigin: true
+      },
       '/api/alerts': {
         target: 'http://localhost:5001',
         changeOrigin: true
@@ -24,6 +28,14 @@ export default defineConfig({
         changeOrigin: true
       },
       '/api/analyze': {
+        target: 'http://localhost:5001',
+        changeOrigin: true
+      },
+      '/api/simulate': {
+        target: 'http://localhost:5001',
+        changeOrigin: true
+      },
+      '/api/clear-logs': {
         target: 'http://localhost:5001',
         changeOrigin: true
       }

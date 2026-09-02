@@ -494,8 +494,10 @@ class LogAnalyzer:
         return {
             "summary": {
                 "total_requests": total_requests,
+                "total_requests_analyzed": total_requests,
                 "total_failed_logins": failed_logins,
                 "total_successful_logins": successful_logins,
+                "total_threat_alerts": len(alerts),
                 "total_alerts": len(alerts),
                 "critical_alerts": critical_alerts,
                 "high_alerts": high_alerts,

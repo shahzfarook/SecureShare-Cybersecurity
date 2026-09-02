@@ -1,6 +1,6 @@
 /**
  * SecureShare Cybersecurity Platform Launcher
- * Starts Auth API (5000), Analyzer API (5001), and Frontend (5173) concurrently
+ * Starts Auth API (5000), Analyzer API (5001), Files Vault API (8001), and Frontend (5173) concurrently
  */
 
 const { spawn } = require("child_process");
@@ -24,6 +24,13 @@ const processes = [
         env: { ...process.env, ANALYZER_PORT: "5001" }
     },
     {
+        name: "FILES",
+        cmd: "python3",
+        args: ["backend/files/server.py", "--port", "8001"],
+        color: "\x1b[33m", // Yellow
+        env: { ...process.env, FILES_PORT: "8001", PORT: "8001" }
+    },
+    {
         name: "FRONTEND",
         cmd: "npx",
         args: ["vite", "--host", "0.0.0.0", "--port", "5173"],
@@ -41,6 +48,7 @@ console.log(" 🔐 Starting SecureShare Cybersecurity Platform");
 console.log("=======================================================");
 console.log("  • Auth Server API:     http://localhost:5000");
 console.log("  • Threat Analyzer API: http://localhost:5001");
+console.log("  • Encrypted Files API: http://localhost:8001");
 console.log("  • Frontend Dashboard:  http://localhost:5173");
 console.log("=======================================================\n");
 

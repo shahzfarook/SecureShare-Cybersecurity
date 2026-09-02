@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 
 const LOG_DIR = path.resolve(__dirname, "../../logs");
-const LOG_FILE = path.join(LOG_DIR, "app_access.log");
+const LOG_FILE = process.env.AUDIT_LOG_FILE || path.join(LOG_DIR, "app_access.log");
 
 // Ensure log directory exists
 try {

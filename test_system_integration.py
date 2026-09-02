@@ -2,7 +2,7 @@
 """
 SecureShare Cybersecurity - System Integration Test Suite
 Tests log parsing, threat detection algorithms, and signature analysis
-against real-world and mock attack logs in backend/logs/app_access.log.
+in an isolated test environment without polluting production app_access.log.
 
 Run with:
     python3 -m unittest test_system_integration.py -v
@@ -10,6 +10,8 @@ Run with:
 
 import os
 import sys
+import shutil
+import tempfile
 import unittest
 from datetime import datetime, timezone
 
@@ -32,28 +34,21 @@ class TestSystemIntegration(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Set up log file path and ensure test log data exists."""
-        cls.log_path = os.path.join(_PROJECT_ROOT, "backend", "logs", "app_access.log")
+        """Set up isolated temporary log file path and generate test scenario."""
+        cls.test_dir = tempfile.mkdtemp(prefix="secureshare_test_logs_")
+        cls.log_path = os.path.join(cls.test_dir, "test_access.log")
         cls.parser = LogParser(default_log_path=cls.log_path)
         cls.analyzer = LogAnalyzer(parser=cls.parser)
 
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(cls.log_path), exist_ok=True)
+        now = datetime.now(timezone.utc)
+        sample_logs = generate_mixed_scenario(now)
+        with open(cls.log_path, "w", encoding="utf-8") as f:
+            f.writelines(sample_logs)
 
-        # If log file does not exist or has fewer than 20 entries, seed it with mixed scenario
-        needs_seed = True
-        if os.path.exists(cls.log_path):
-            existing_entries = cls.parser.parse_file(cls.log_path)
-            # Check if key attacker IPs are present
-            ips = {e.ip for e in existing_entries}
-            if "198.51.100.42" in ips and "203.0.113.88" in ips and "198.51.100.99" in ips:
-                needs_seed = False
-
-        if needs_seed:
-            now = datetime.now(timezone.utc)
-            sample_logs = generate_mixed_scenario(now)
-            with open(cls.log_path, "w", encoding="utf-8") as f:
-                f.writelines(sample_logs)
+    @classmethod
+    def tearDownClass(cls):
+        """Clean up temporary test directory."""
+        shutil.rmtree(cls.test_dir, ignore_errors=True)
 
     def setUp(self):
         """Parse log file before each test."""
@@ -84,7 +79,7 @@ class TestSystemIntegration(unittest.TestCase):
         self.assertFalse(entry.is_successful_login(), "Status 401 must not be marked as successful login")
         self.assertIsNotNone(entry.timestamp.tzinfo, "Parsed timestamp must be timezone-aware")
 
-        # Verify parsed entries from app_access.log
+        # Verify parsed entries from test log
         valid_entries = [e for e in self.entries if isinstance(e, LogEntry)]
         self.assertEqual(len(valid_entries), len(self.entries))
         for e in self.entries:

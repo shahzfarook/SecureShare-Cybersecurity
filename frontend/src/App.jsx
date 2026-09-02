@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -10,8 +10,8 @@ import Dashboard from "./pages/Dashboard";
 import MyFiles from "./pages/MyFiles";
 import UploadFile from "./pages/UploadFile";
 import SharedFiles from "./pages/SharedFiles";
-import Activity from "./pages/Activity";
-import ThreatCenter from "./pages/ThreatCenter";
+import AttackSimulator from "./pages/AttackSimulator";
+import AttackLogs from "./pages/AttackLogs";
 
 function Layout({ children }) {
   return (
@@ -33,12 +33,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-
-        {/* Login */}
+        {/* Authentication */}
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-
-        {/* Register */}
         <Route path="/register" element={<Register />} />
 
         {/* Dashboard */}
@@ -51,17 +48,32 @@ function App() {
           }
         />
 
-        {/* Threats & Vulnerability Center */}
+        {/* Attack Simulator */}
         <Route
-          path="/threats"
+          path="/simulator"
           element={
             <Layout>
-              <ThreatCenter />
+              <AttackSimulator />
             </Layout>
           }
         />
 
-        {/* Other pages */}
+        {/* Attack & Access Logs */}
+        <Route
+          path="/logs"
+          element={
+            <Layout>
+              <AttackLogs />
+            </Layout>
+          }
+        />
+
+        {/* Seamless Navigation Aliases / Redirects */}
+        <Route path="/simulation" element={<Navigate to="/simulator" replace />} />
+        <Route path="/threats" element={<Navigate to="/logs" replace />} />
+        <Route path="/activity" element={<Navigate to="/logs" replace />} />
+
+        {/* Encrypted File Storage */}
         <Route
           path="/files"
           element={
@@ -88,16 +100,6 @@ function App() {
             </Layout>
           }
         />
-
-        <Route
-          path="/activity"
-          element={
-            <Layout>
-              <Activity />
-            </Layout>
-          }
-        />
-
       </Routes>
     </BrowserRouter>
   );
