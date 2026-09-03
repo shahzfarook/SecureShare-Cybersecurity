@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { TerminalIcon, TrashIcon, CheckIcon, AlertIcon, LogIcon, CopyIcon } from "../components/Icons";
+import { getApiUrl } from "../config/api";
 
 const ATTACK_CODE_SNIPPETS = {
   brute_force: {
@@ -182,12 +183,7 @@ function AttackSimulator() {
     try {
       setSimulating(attackType);
       setActionMessage(null);
-      let res;
-      try {
-        res = await axios.post("/api/simulate", { attack_type: attackType });
-      } catch {
-        res = await axios.post("http://localhost:5001/api/simulate", { attack_type: attackType });
-      }
+      const res = await axios.post(getApiUrl("/api/simulate"), { attack_type: attackType });
 
       const msg = res.data.message || `Injected attack scenario for ${label}`;
       setActionMessage({ type: "success", text: msg });
@@ -225,11 +221,7 @@ function AttackSimulator() {
     if (!window.confirm("Are you sure you want to clear access logs and reset the Threat Engine baseline?")) return;
 
     try {
-      try {
-        await axios.post("/api/clear-logs");
-      } catch {
-        await axios.post("http://localhost:5001/api/clear-logs");
-      }
+      await axios.post(getApiUrl("/api/clear-logs"));
       setActionMessage({ type: "success", text: "Access logs cleared. Threat detection baseline reset." });
       setHistory([]);
     } catch (err) {

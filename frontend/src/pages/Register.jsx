@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { ShieldIcon, AlertIcon } from "../components/Icons";
+import { getApiUrl } from "../config/api";
 
 function Register() {
   const [name, setName] = useState("");
@@ -30,12 +31,7 @@ function Register() {
     setError(null);
 
     try {
-      let res;
-      try {
-        res = await axios.post("/api/auth/register", { name, email, password, role: "user" });
-      } catch {
-        res = await axios.post("http://localhost:5000/api/auth/register", { name, email, password, role: "user" });
-      }
+      const res = await axios.post(getApiUrl("/api/auth/register"), { name, email, password, role: "user" });
 
       const username = name.toLowerCase().replace(/\s+/g, "_") || email.split("@")[0];
       localStorage.setItem("secureshare_user", username);

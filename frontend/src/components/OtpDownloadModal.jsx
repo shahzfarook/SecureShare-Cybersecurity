@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { LockIcon, AlertIcon, DownloadIcon, RefreshIcon } from "./Icons";
+import { getApiUrl } from "../config/api";
 
 function OtpDownloadModal({ file, onClose, onSuccess }) {
   const [otpCode, setOtpCode] = useState("");
@@ -18,12 +19,7 @@ function OtpDownloadModal({ file, onClose, onSuccess }) {
     setOtpCode("");
     try {
       const userEmail = localStorage.getItem("secureshare_email") || "";
-      let res;
-      try {
-        res = await axios.post(`/api/files/request-download/${file.file_id}`, { email: userEmail });
-      } catch {
-        res = await axios.post(`http://localhost:8001/api/files/request-download/${file.file_id}`, { email: userEmail });
-      }
+      const res = await axios.post(getApiUrl(`/api/files/request-download/${file.file_id}`), { email: userEmail });
 
       setRecipientEmail(res.data?.recipient_email || "your registered email");
       setTimeLeft(res.data?.expires_in_seconds || 300);
@@ -67,20 +63,11 @@ function OtpDownloadModal({ file, onClose, onSuccess }) {
     setError(null);
 
     try {
-      let res;
-      try {
-        res = await axios.post(
-          "/api/files/verify-download",
-          { file_id: file.file_id, otp_code: otpCode.trim() },
-          { responseType: "blob" }
-        );
-      } catch {
-        res = await axios.post(
-          "http://localhost:8001/api/files/verify-download",
-          { file_id: file.file_id, otp_code: otpCode.trim() },
-          { responseType: "blob" }
-        );
-      }
+      const res = await axios.post(
+        getApiUrl("/api/files/verify-download"),
+        { file_id: file.file_id, otp_code: otpCode.trim() },
+        { responseType: "blob" }
+      );
 
       // Create download anchor and trigger browser download
       const blob = new Blob([res.data]);

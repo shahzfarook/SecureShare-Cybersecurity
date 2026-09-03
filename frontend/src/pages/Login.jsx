@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { ShieldIcon, AlertIcon } from "../components/Icons";
+import { getApiUrl } from "../config/api";
 
 function Login() {
   const [email, setEmail] = useState("admin@secureshare.local");
@@ -19,12 +20,7 @@ function Login() {
     setError(null);
 
     try {
-      let res;
-      try {
-        res = await axios.post("/api/auth/login", { email, password });
-      } catch {
-        res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
-      }
+      const res = await axios.post(getApiUrl("/api/auth/login"), { email, password });
 
       const data = res.data;
       const username = data.user?.name || data.user?.username || email.split("@")[0];

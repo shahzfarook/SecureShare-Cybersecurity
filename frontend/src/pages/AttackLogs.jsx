@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { SearchIcon, RefreshIcon, LogIcon, DownloadIcon, AlertIcon, ShieldIcon, CopyIcon, CheckIcon, TerminalIcon } from "../components/Icons";
+import { getApiUrl } from "../config/api";
 
 function AttackLogs() {
   const [activeTab, setActiveTab] = useState("incidents"); // 'incidents' | 'raw_logs'
@@ -19,32 +20,17 @@ function AttackLogs() {
     try {
       setLoading(true);
 
-      // 1. Fetch Alerts (Port 5001)
-      let alertsRes;
-      try {
-        alertsRes = await axios.get("/api/alerts?limit=100");
-      } catch {
-        alertsRes = await axios.get("http://localhost:5001/api/alerts?limit=100");
-      }
+      // 1. Fetch Alerts
+      const alertsRes = await axios.get(getApiUrl("/api/alerts?limit=100"));
       setAlerts(alertsRes.data.alerts || []);
 
-      // 2. Fetch Raw Logs (Port 5001)
-      let queryStr = `limit=100${search ? `&search=${encodeURIComponent(search)}` : ""}${statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : ""}`;
-      let logsRes;
-      try {
-        logsRes = await axios.get(`/api/logs?${queryStr}`);
-      } catch {
-        logsRes = await axios.get(`http://localhost:5001/api/logs?${queryStr}`);
-      }
+      // 2. Fetch Raw Logs
+      const queryStr = `limit=100${search ? `&search=${encodeURIComponent(search)}` : ""}${statusFilter ? `&status=${encodeURIComponent(statusFilter)}` : ""}`;
+      const logsRes = await axios.get(getApiUrl(`/api/logs?${queryStr}`));
       setLogs(logsRes.data.logs || []);
 
-      // 3. Fetch Stats (Port 5001)
-      let statsRes;
-      try {
-        statsRes = await axios.get("/api/stats");
-      } catch {
-        statsRes = await axios.get("http://localhost:5001/api/stats");
-      }
+      // 3. Fetch Stats
+      const statsRes = await axios.get(getApiUrl("/api/stats"));
       setStats(statsRes.data || null);
     } catch (e) {
       console.log("Log data fetch error:", e.message);

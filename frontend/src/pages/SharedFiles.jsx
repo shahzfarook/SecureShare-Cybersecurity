@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { CopyIcon, CheckIcon, FileIcon, DownloadIcon } from "../components/Icons";
 import OtpDownloadModal from "../components/OtpDownloadModal";
+import { getApiUrl } from "../config/api";
 
 function SharedFiles() {
   const [files, setFiles] = useState([]);
@@ -11,12 +12,7 @@ function SharedFiles() {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        let res;
-        try {
-          res = await axios.get("/api/files/list");
-        } catch {
-          res = await axios.get("http://localhost:8001/api/files/list");
-        }
+        const res = await axios.get(getApiUrl("/api/files/list"));
         setFiles(res.data || []);
       } catch (e) {
         console.log("Failed to load files:", e.message);
@@ -26,7 +22,7 @@ function SharedFiles() {
   }, []);
 
   const handleCopyLink = (fileId) => {
-    const downloadUrl = `${window.location.origin}/api/files/download/${fileId}`;
+    const downloadUrl = getApiUrl(`/api/files/download/${fileId}`);
     navigator.clipboard.writeText(downloadUrl);
     setCopiedId(fileId);
     setTimeout(() => setCopiedId(null), 2500);

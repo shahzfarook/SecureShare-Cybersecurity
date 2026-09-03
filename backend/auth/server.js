@@ -11,7 +11,31 @@ const { LOG_FILE } = require("./utils/auditLogger");
 
 const app = express();
 
-app.use(cors());
+// Explicit and permissive CORS support for Vercel, Render, and local development
+const allowedOrigins = [
+  "https://secureshare-cybersecurity.vercel.app",
+  "https://secureshare-api-suph.onrender.com",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174"
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.endsWith(".onrender.com")) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Allow other clients / tools
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-User", "X-Filename", "X-Description", "X-User-Email"]
+  })
+);
+
 app.use(express.json());
 
 // Mount authentication routes

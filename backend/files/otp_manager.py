@@ -241,70 +241,99 @@ class DownloadOTPManager:
 
     def _send_email(self, recipient_email: str, filename: str, otp_code: str) -> bool:
         """
-        Dispatches HTML OTP verification email via real Gmail SMTP or console logging.
+        Dispatches HTML OTP verification email via real Gmail SMTP with plain-text fallback,
+        clean sender headers, replyTo, priority headers, and anti-spam footer.
         Reads SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM.
         """
         _load_env()
-        smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+        smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
         smtp_port = int(os.environ.get("SMTP_PORT", "587"))
         smtp_user = os.environ.get("SMTP_USER", "").strip()
         smtp_pass = os.environ.get("SMTP_PASS", "").strip()
-        sender = os.environ.get("SMTP_FROM", smtp_user or "security@secureshare.local")
+        
+        sender_email = os.environ.get("SMTP_FROM", smtp_user or "anfasularifeen.nasimudeen@gmail.com").strip() or "anfasularifeen.nasimudeen@gmail.com"
+        sender_header = f'"SecureShare Security" <{sender_email}>'
+        reply_to_email = sender_email
 
-        # HTML Email Template
-        subject = f"🔐 SecureShare File Decryption Code: {otp_code}"
+        # 1. Optimized Dynamic Subject Line
+        subject = f"Verification Code: {otp_code} for SecureShare File Decryption"
+
+        # 2. Plain-Text Fallback Body (prevents spam flags)
+        plain_text_content = f"""SecureShare File Decryption Verification
+
+A request was made to decrypt and download the following file from your SecureShare Encrypted Vault:
+Target File: {filename}
+
+Your 6-Digit One-Time Verification Passcode:
+>>> {otp_code} <<<
+
+Security Details:
+• Valid for 5 minutes (single-use).
+• If you did not initiate this download request on SecureShare, your account or file access keys may be compromised.
+
+You received this email because a file download request was initiated on the SecureShare Security Platform. If you did not request this, please ignore this message.
+
+Protected by SecureShare AES-256-GCM Cryptographic Storage & SIEM Threat Engine
+"""
+
+        # 3. Formatted Professional HTML Template
         html_content = f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>SecureShare File Decryption Code</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verification Code: {otp_code} for SecureShare File Decryption</title>
 </head>
-<body style="margin: 0; padding: 30px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<body style="margin: 0; padding: 32px 16px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   <table role="presentation" style="width: 100%; border-collapse: collapse;">
     <tr>
       <td align="center">
-        <table role="presentation" style="max-width: 500px; width: 100%; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
+        <table role="presentation" style="max-width: 520px; width: 100%; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(0,0,0,0.06); overflow: hidden;">
           <!-- Header Banner -->
           <tr>
-            <td style="padding: 28px 32px 20px; background: linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%); text-align: center;">
+            <td style="padding: 28px 32px; background: linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%); text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">SecureShare Vault</h1>
-              <p style="margin: 4px 0 0; color: #e9d5ff; font-size: 13px; font-weight: 500;">Zero-Trust Encrypted File Download</p>
+              <p style="margin: 4px 0 0; color: #e9d5ff; font-size: 13px; font-weight: 500;">Zero-Trust Encrypted File Access</p>
             </td>
           </tr>
           
           <!-- Content Body -->
           <tr>
-            <td style="padding: 32px;">
-              <p style="margin: 0 0 16px; color: #0f172a; font-size: 15px; font-weight: 600;">
-                Two-Factor Download Verification
-              </p>
-              <p style="margin: 0 0 20px; color: #475569; font-size: 14px; line-height: 1.5;">
-                A request was made to decrypt and download the file: <br/>
-                <strong style="color: #0f172a;">{filename}</strong>
+            <td style="padding: 32px 32px 28px;">
+              <h2 style="margin: 0 0 12px; color: #0f172a; font-size: 16px; font-weight: 700;">
+                File Decryption Verification
+              </h2>
+              <p style="margin: 0 0 18px; color: #475569; font-size: 14px; line-height: 1.6;">
+                This email was requested because an authorized download was initiated for the encrypted file: <br/>
+                <strong style="color: #0f172a; word-break: break-all;">{filename}</strong>
               </p>
               
-              <!-- Code Box -->
+              <!-- 6-Digit Passcode Box -->
               <div style="background: #faf5ff; border: 2px dashed #a855f7; border-radius: 12px; padding: 22px; text-align: center; margin: 24px 0;">
-                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #7e22ce;">One-Time Security Passcode</span>
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #7e22ce; display: block;">One-Time Verification Passcode</span>
                 <div style="font-size: 38px; font-weight: 900; letter-spacing: 8px; color: #6b21a8; font-family: 'Courier New', Courier, monospace; margin-top: 8px;">
                   {otp_code}
                 </div>
               </div>
               
-              <p style="margin: 0 0 8px; color: #64748b; font-size: 13px; line-height: 1.4;">
-                ⏱️ This code expires in <strong>5 minutes</strong> and can only be used once.
+              <!-- Security Explanations -->
+              <p style="margin: 0 0 10px; color: #64748b; font-size: 13px; line-height: 1.5;">
+                ⏱️ This code will expire in <strong>5 minutes</strong> and can only be used once to decrypt this specific file.
               </p>
-              <p style="margin: 0; color: #ef4444; font-size: 12px; line-height: 1.4;">
-                ⚠️ If you did not request this download, your account or file credentials may be compromised.
+              <p style="margin: 0; color: #dc2626; font-size: 12px; line-height: 1.5;">
+                ⚠️ If you did not initiate this download on SecureShare, please ignore this email or review your account activity.
               </p>
             </td>
           </tr>
           
-          <!-- Footer -->
+          <!-- Explicit Compliance & Anti-Spam Footer -->
           <tr>
-            <td style="padding: 20px 32px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
-              <p style="margin: 0; color: #94a3b8; font-size: 11px;">
-                Protected by SecureShare AES-256-GCM Storage &amp; SIEM Threat Engine
+            <td style="padding: 22px 32px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="margin: 0 0 6px; color: #64748b; font-size: 12px; line-height: 1.5;">
+                You received this email because a file download request was initiated on the SecureShare Security Platform. If you did not request this, please ignore this message.
+              </p>
+              <p style="margin: 0; color: #94a3b8; font-size: 11px; line-height: 1.4;">
+                Protected by SecureShare AES-256-GCM Cryptographic Storage &amp; SIEM Threat Engine
               </p>
             </td>
           </tr>
@@ -320,31 +349,43 @@ class DownloadOTPManager:
             try:
                 msg = MIMEMultipart("alternative")
                 msg["Subject"] = subject
-                msg["From"] = f"SecureShare Security <{sender}>"
+                msg["From"] = sender_header
                 msg["To"] = recipient_email
-                msg.attach(MIMEText(f"SecureShare File Decryption Code for '{filename}': {otp_code} (Expires in 5 minutes).", "plain"))
-                msg.attach(MIMEText(html_content, "html"))
+                msg["Reply-To"] = reply_to_email
+                msg["X-Priority"] = "1 (Highest)"
+                msg["X-MSMail-Priority"] = "High"
+                msg["Importance"] = "High"
+                msg["X-Entity-Ref-ID"] = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+                msg["X-Mailer"] = "SecureShare-Vault-Mailer/1.0"
+                msg["Auto-Submitted"] = "auto-generated"
+
+                # Attach Plain-Text Fallback first, then HTML
+                msg.attach(MIMEText(plain_text_content, "plain", "utf-8"))
+                msg.attach(MIMEText(html_content, "html", "utf-8"))
 
                 if smtp_port == 465:
                     with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=12) as server:
                         server.login(smtp_user, smtp_pass)
-                        server.sendmail(sender, [recipient_email], msg.as_string())
+                        server.sendmail(sender_email, [recipient_email], msg.as_string())
                 else:
                     with smtplib.SMTP(smtp_host, smtp_port, timeout=12) as server:
                         server.starttls()
                         server.login(smtp_user, smtp_pass)
-                        server.sendmail(sender, [recipient_email], msg.as_string())
+                        server.sendmail(sender_email, [recipient_email], msg.as_string())
 
-                print(f"📧 [SMTP SUCCESS] Delivered 6-digit 2FA code to {recipient_email} via {smtp_host}:{smtp_port}")
+                print(f"📧 [SMTP SUCCESS] Delivered 6-digit 2FA code to {recipient_email} from {sender_header} via {smtp_host}:{smtp_port}")
                 return True
             except Exception as e:
                 print(f"❌ [SMTP ERROR] Failed to send email via {smtp_host}:{smtp_port} to {recipient_email}: {e}")
-                print(f"💡 [SMTP TIP] If using Gmail, ensure you created a 16-character Google App Password (not your regular password).")
+                print(f"💡 [SMTP TIP] If using Gmail, ensure you created a 16-character Google App Password in your Google Account.")
 
         # Console fallback logging
         print("=" * 64)
         print(f"📧 [SECURESHARE 2FA DISPATCH] File Download Code")
+        print(f"   From:       {sender_header}")
+        print(f"   Reply-To:   {reply_to_email}")
         print(f"   Recipient:  {recipient_email}")
+        print(f"   Subject:    {subject}")
         print(f"   Target File:{filename}")
         print(f"   OTP Code:   >>> {otp_code} <<< (Valid for 5 minutes)")
         if not (smtp_user and smtp_pass):

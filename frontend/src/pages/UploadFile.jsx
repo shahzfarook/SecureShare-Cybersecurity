@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { LockIcon, UploadIcon, CheckIcon, AlertIcon } from "../components/Icons";
+import { getApiUrl } from "../config/api";
 
 function UploadFile() {
   const [file, setFile] = useState(null);
@@ -53,21 +54,18 @@ function UploadFile() {
     }
 
     try {
-      let response;
-      try {
-        response = await axios.post("/api/files/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      } catch {
-        response = await axios.post("http://localhost:8001/api/files/upload", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-      }
+      const userEmail = localStorage.getItem("secureshare_email") || "anonymous";
+      const response = await axios.post(getApiUrl("/api/files/upload"), formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "X-User": userEmail,
+        },
+      });
       setResult(response.data);
       setFile(null);
       setDescription("");
     } catch (err) {
-      setError(err.response?.data?.detail || err.response?.data?.error || "Upload failed. Ensure the File Sharing API is running on port 8001.");
+      setError(err.response?.data?.detail || err.response?.data?.error || "Upload failed. Ensure the SecureShare API service is online.");
     } finally {
       setUploading(false);
     }

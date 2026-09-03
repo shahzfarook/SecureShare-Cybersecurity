@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { ShieldIcon, LockIcon, FileIcon, RefreshIcon, UploadIcon, AlertIcon, DownloadIcon, TerminalIcon, LogIcon } from "../components/Icons";
+import { getApiUrl } from "../config/api";
 
 function Dashboard() {
   const [fileStats, setFileStats] = useState({ total_files: 0, total_plain_size_bytes: 0, total_encrypted_size_bytes: 0 });
@@ -10,53 +11,33 @@ function Dashboard() {
   const [recentFiles, setRecentFiles] = useState([]);
 
   const fetchDashboardData = async () => {
-    // 1. Fetch File Storage Stats (Port 8001)
+    // 1. Fetch File Storage Stats
     try {
-      let fileRes;
-      try {
-        fileRes = await axios.get("/api/files/stats");
-      } catch {
-        fileRes = await axios.get("http://localhost:8001/api/files/stats");
-      }
+      const fileRes = await axios.get(getApiUrl("/api/files/stats"));
       setFileStats(fileRes.data || {});
     } catch (e) {
       console.log("Files API offline:", e.message);
     }
 
-    // 2. Fetch File List for recent activity (Port 8001)
+    // 2. Fetch File List for recent activity
     try {
-      let listRes;
-      try {
-        listRes = await axios.get("/api/files/list");
-      } catch {
-        listRes = await axios.get("http://localhost:8001/api/files/list");
-      }
+      const listRes = await axios.get(getApiUrl("/api/files/list"));
       setRecentFiles((listRes.data || []).slice(0, 5));
     } catch (e) {
       console.log("Files list offline:", e.message);
     }
 
-    // 3. Fetch Threat Stats (Port 5001)
+    // 3. Fetch Threat Stats
     try {
-      let threatRes;
-      try {
-        threatRes = await axios.get("/api/stats");
-      } catch {
-        threatRes = await axios.get("http://localhost:5001/api/stats");
-      }
+      const threatRes = await axios.get(getApiUrl("/api/stats"));
       setThreatStats(threatRes.data || {});
     } catch (e) {
       console.log("Log Analyzer API offline:", e.message);
     }
 
-    // 4. Fetch Recent Security Alerts (Port 5001)
+    // 4. Fetch Recent Security Alerts
     try {
-      let alertsRes;
-      try {
-        alertsRes = await axios.get("/api/alerts?limit=5");
-      } catch {
-        alertsRes = await axios.get("http://localhost:5001/api/alerts?limit=5");
-      }
+      const alertsRes = await axios.get(getApiUrl("/api/alerts?limit=5"));
       const rawAlerts = alertsRes.data?.alerts || [];
       const sorted = [...rawAlerts].sort(
         (a, b) => new Date(b.last_seen || b.first_seen).getTime() - new Date(a.last_seen || a.first_seen).getTime()

@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { FileIcon, RefreshIcon, UploadIcon, DownloadIcon, TrashIcon, ShieldIcon, CheckIcon, AlertIcon, CopyIcon } from "../components/Icons";
 import OtpDownloadModal from "../components/OtpDownloadModal";
+import { getApiUrl } from "../config/api";
 
 function MyFiles() {
   const [files, setFiles] = useState([]);
@@ -19,16 +20,11 @@ function MyFiles() {
   const fetchFiles = async () => {
     try {
       setLoading(true);
-      let res;
-      try {
-        res = await axios.get("/api/files/list");
-      } catch {
-        res = await axios.get("http://localhost:8001/api/files/list");
-      }
+      const res = await axios.get(getApiUrl("/api/files/list"));
       setFiles(res.data || []);
       setError(null);
     } catch {
-      setError("Could not connect to File Sharing API (port 8001). Make sure the backend is running.");
+      setError("Could not connect to SecureShare API. Make sure the backend service is running.");
     } finally {
       setLoading(false);
     }
@@ -41,12 +37,7 @@ function MyFiles() {
   const handleVerifyIntegrity = async (fileId) => {
     try {
       setVerifyingId(fileId);
-      let res;
-      try {
-        res = await axios.get(`/api/files/verify/${fileId}`);
-      } catch {
-        res = await axios.get(`http://localhost:8001/api/files/verify/${fileId}`);
-      }
+      const res = await axios.get(getApiUrl(`/api/files/verify/${fileId}`));
       
       const vData = res.data;
       setVerificationResult((prev) => ({ ...prev, [fileId]: vData }));
@@ -67,13 +58,9 @@ function MyFiles() {
 
     try {
       try {
-        await axios.delete(`/api/files/${fileId}`);
+        await axios.delete(getApiUrl(`/api/files/${fileId}`));
       } catch {
-        try {
-          await axios.delete(`http://localhost:8001/api/files/${fileId}`);
-        } catch {
-          await axios.post(`http://localhost:8001/api/files/delete/${fileId}`);
-        }
+        await axios.post(getApiUrl(`/api/files/delete/${fileId}`));
       }
       setFiles((prev) => prev.filter((f) => f.file_id !== fileId));
       if (activeModalData?.file_id === fileId) {
