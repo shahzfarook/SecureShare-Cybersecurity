@@ -62,7 +62,7 @@ def generate_brute_force_scenario(base_time: datetime, attacker_ip: str = "198.5
     """Generate >5 failed logins in <60 seconds from one IP to trigger BRUTE_FORCE_ATTACK."""
     logs = []
     for i in range(attempts):
-        ts = base_time + timedelta(seconds=i * 5)
+        ts = base_time - timedelta(seconds=(attempts - 1 - i) * 3)
         logs.append(format_log(
             timestamp=ts,
             ip=attacker_ip,
@@ -81,7 +81,7 @@ def generate_credential_stuffing_scenario(base_time: datetime, attacker_ip: str 
     logs = []
     users = ["root", "admin", "administrator", "ahmed", "anuraj", "shahz", "anfas"]
     for i, u in enumerate(users):
-        ts = base_time + timedelta(seconds=i * 8)
+        ts = base_time - timedelta(seconds=(len(users) - 1 - i) * 4)
         logs.append(format_log(
             timestamp=ts,
             ip=attacker_ip,
@@ -105,7 +105,7 @@ def generate_path_traversal_scenario(base_time: datetime, attacker_ip: str = "19
         ("GET", "/api/files/view?file=..%2f..%2f..%2fetc%2fshadow", 400, "Encoded traversal blocked"),
     ]
     for i, (m, ep, code, msg) in enumerate(probes):
-        ts = base_time + timedelta(seconds=i * 5)
+        ts = base_time - timedelta(seconds=(len(probes) - 1 - i) * 3)
         logs.append(format_log(
             timestamp=ts,
             ip=attacker_ip,
@@ -128,7 +128,7 @@ def generate_sqli_scenario(base_time: datetime, attacker_ip: str = "198.51.100.9
         ("POST", "/api/auth/token", 400, "SQL Injection attempt: admin' --"),
     ]
     for i, (m, ep, code, msg) in enumerate(probes):
-        ts = base_time + timedelta(seconds=i * 6)
+        ts = base_time - timedelta(seconds=(len(probes) - 1 - i) * 3)
         logs.append(format_log(
             timestamp=ts,
             ip=attacker_ip,
@@ -154,7 +154,7 @@ def generate_web_probe_scenario(base_time: datetime, attacker_ip: str = "198.51.
         ("GET", "/wp-login.php", 404, "Probing for CMS management interfaces"),
     ]
     for i, (m, ep, code, msg) in enumerate(probes):
-        ts = base_time + timedelta(seconds=i * 12)
+        ts = base_time - timedelta(seconds=(len(probes) - 1 - i) * 4)
         logs.append(format_log(
             timestamp=ts,
             ip=attacker_ip,
@@ -172,7 +172,7 @@ def generate_rate_anomaly_scenario(base_time: datetime, attacker_ip: str = "198.
     """Generate 35 rapid requests in 5 seconds to trigger RATE_ANOMALY."""
     logs = []
     for i in range(count):
-        ts = base_time + timedelta(milliseconds=i * 120)
+        ts = base_time - timedelta(milliseconds=(count - 1 - i) * 100)
         logs.append(format_log(
             timestamp=ts,
             ip=attacker_ip,

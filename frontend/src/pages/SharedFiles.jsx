@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { CopyIcon, CheckIcon, FileIcon } from "../components/Icons";
+import { CopyIcon, CheckIcon, FileIcon, DownloadIcon } from "../components/Icons";
+import OtpDownloadModal from "../components/OtpDownloadModal";
 
 function SharedFiles() {
   const [files, setFiles] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
+  const [selectedDownloadFile, setSelectedDownloadFile] = useState(null);
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -57,8 +59,8 @@ function SharedFiles() {
                 <tr>
                   <th>File Name</th>
                   <th>Encryption & Integrity</th>
-                  <th>Direct Download Link</th>
-                  <th style={{ textAlign: "right" }}>Action</th>
+                  <th>Direct Vault Link</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -89,27 +91,39 @@ function SharedFiles() {
                         readOnly
                         value={`${window.location.origin}/api/files/download/${file.file_id}`}
                         className="cyber-input"
-                        style={{ fontSize: "12px", padding: "8px 12px", color: "var(--accent-primary)", width: "340px", fontWeight: "600" }}
+                        style={{ fontSize: "12px", padding: "8px 12px", color: "var(--accent-primary)", width: "300px", fontWeight: "600" }}
                         onClick={(e) => e.target.select()}
                       />
                     </td>
 
                     <td style={{ textAlign: "right" }}>
-                      <button
-                        className="btn-primary"
-                        style={{ padding: "8px 16px", fontSize: "12px" }}
-                        onClick={() => handleCopyLink(file.file_id)}
-                      >
-                        {copiedId === file.file_id ? (
-                          <>
-                            <CheckIcon size={14} /> Link Copied
-                          </>
-                        ) : (
-                          <>
-                            <CopyIcon size={14} /> Copy Link
-                          </>
-                        )}
-                      </button>
+                      <div style={{ display: "inline-flex", gap: "8px" }}>
+                        <button
+                          className="btn-secondary"
+                          style={{ padding: "8px 14px", fontSize: "12px" }}
+                          onClick={() => handleCopyLink(file.file_id)}
+                          title="Copy download link"
+                        >
+                          {copiedId === file.file_id ? (
+                            <>
+                              <CheckIcon size={14} /> Copied
+                            </>
+                          ) : (
+                            <>
+                              <CopyIcon size={14} /> Copy Link
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          className="btn-primary"
+                          style={{ padding: "8px 14px", fontSize: "12px" }}
+                          onClick={() => setSelectedDownloadFile(file)}
+                          title="Verify 2FA OTP & Download"
+                        >
+                          <DownloadIcon size={14} /> Download
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -118,6 +132,14 @@ function SharedFiles() {
           </div>
         )}
       </div>
+
+      {/* 2FA Email OTP Download Verification Modal */}
+      {selectedDownloadFile && (
+        <OtpDownloadModal
+          file={selectedDownloadFile}
+          onClose={() => setSelectedDownloadFile(null)}
+        />
+      )}
     </div>
   );
 }

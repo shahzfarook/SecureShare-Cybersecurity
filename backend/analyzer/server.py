@@ -8,6 +8,7 @@ with full CORS support for frontend consumption.
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import random
 from urllib.parse import urlparse, parse_qs
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -248,15 +249,16 @@ class AnalyzerAPIHandler(BaseHTTPRequestHandler):
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
                 now = datetime.now(timezone.utc)
 
+                rand_suffix = random.randint(11, 249)
                 lines_to_write = []
                 if attack_type == "brute_force":
-                    lines_to_write = generate_brute_force_scenario(now, attacker_ip="198.51.100.42", target_user="admin", attempts=8)
+                    lines_to_write = generate_brute_force_scenario(now, attacker_ip=f"198.51.100.{rand_suffix}", target_user="admin", attempts=8)
                 elif attack_type == "sqli":
-                    lines_to_write = generate_sqli_scenario(now, attacker_ip="198.51.100.99")
+                    lines_to_write = generate_sqli_scenario(now, attacker_ip=f"198.51.100.{rand_suffix}")
                 elif attack_type == "credential_stuffing":
-                    lines_to_write = generate_credential_stuffing_scenario(now, attacker_ip="203.0.113.88")
+                    lines_to_write = generate_credential_stuffing_scenario(now, attacker_ip=f"203.0.113.{rand_suffix}")
                 elif attack_type == "path_traversal":
-                    lines_to_write = generate_path_traversal_scenario(now, attacker_ip="198.51.100.77")
+                    lines_to_write = generate_path_traversal_scenario(now, attacker_ip=f"198.51.100.{rand_suffix}")
                 else:  # "all" or mixed
                     lines_to_write = generate_mixed_scenario(now)
 

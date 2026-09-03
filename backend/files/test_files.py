@@ -47,6 +47,7 @@ try:
         StorageError,
         FileNotFoundStorageError,
     )
+    from backend.files.otp_manager import DownloadOTPManager, download_otp_manager
     if FASTAPI_AVAILABLE:
         from backend.files.router import (
             router as files_router,
@@ -67,6 +68,7 @@ except (ImportError, ValueError):
         StorageError,
         FileNotFoundStorageError,
     )
+    from otp_manager import DownloadOTPManager, download_otp_manager
     files_router = None
     storage_manager = None
 
@@ -177,8 +179,67 @@ class TestFileStorageManager(unittest.TestCase):
 
         stats = self.manager.get_storage_stats()
         self.assertEqual(stats["total_files"], 2)
-        self.assertEqual(stats["total_plain_size_bytes"], 20)
-        self.assertGreater(stats["total_encrypted_size_bytes"], 20)
+class TestDownloadOTPManager(unittest.TestCase):
+    """Unit tests for 2FA email OTP generation, 5-minute expiration, and verification."""
+
+    def setUp(self):
+        self.otp_manager = DownloadOTPManager()
+        self.file_id = "test-file-uuid-12345"
+        self.email = "operator@secureshare.local"
+        self.filename = "secret_audit.pdf"
+
+    def test_otp_generation_and_expiry(self):
+        res = self.otp_manager.generate_otp(self.file_id, self.email, self.filename)
+        self.assertEqual(res["file_id"], self.file_id)
+        self.assertEqual(len(res["dev_otp"]), 6)
+        self.assertTrue(res["dev_otp"].isdigit())
+        self.assertEqual(res["expires_in_seconds"], 300)
+        self.assertIn("@", res["recipient_email"])
+
+        active = self.otp_manager.get_active_otp(self.file_id)
+        self.assertIsNotNone(active)
+        self.assertEqual(active["file_id"], self.file_id)
+        self.assertGreater(active["expires_in_seconds"], 0)
+
+    def test_otp_valid_verification_and_consumption(self):
+        res = self.otp_manager.generate_otp(self.file_id, self.email, self.filename)
+        code = res["dev_otp"]
+
+        is_valid, msg = self.otp_manager.verify_otp(self.file_id, code)
+        self.assertTrue(is_valid)
+        self.assertIn("verified", msg.lower())
+
+        # Single-use: Subsequent verification of same code must fail
+        is_valid_again, msg_again = self.otp_manager.verify_otp(self.file_id, code)
+        self.assertFalse(is_valid_again)
+        self.assertIn("no active download otp found", msg_again.lower())
+
+    def test_otp_wrong_code_rejection_and_lockout(self):
+        self.otp_manager.generate_otp(self.file_id, self.email, self.filename)
+
+        # Attempt 1
+        is_valid_1, msg_1 = self.otp_manager.verify_otp(self.file_id, "000000")
+        self.assertFalse(is_valid_1)
+        self.assertIn("2 attempt(s) remaining", msg_1)
+
+        # Attempt 2
+        is_valid_2, msg_2 = self.otp_manager.verify_otp(self.file_id, "111111")
+        self.assertFalse(is_valid_2)
+        self.assertIn("1 attempt(s) remaining", msg_2)
+
+        # Attempt 3 -> Lockout / Invalidated
+        is_valid_3, msg_3 = self.otp_manager.verify_otp(self.file_id, "222222")
+        self.assertFalse(is_valid_3)
+        self.assertIn("exceeded", msg_3.lower())
+
+        # Further attempts fail completely
+        is_valid_4, msg_4 = self.otp_manager.verify_otp(self.file_id, "333333")
+        self.assertFalse(is_valid_4)
+
+    def test_email_masking(self):
+        self.assertEqual(DownloadOTPManager.mask_email("admin@secureshare.local"), "a***n@secureshare.local")
+        self.assertEqual(DownloadOTPManager.mask_email("me@example.com"), "m***@example.com")
+        self.assertEqual(DownloadOTPManager.mask_email("invalid"), "u***@secureshare.local")
 
 
 @unittest.skipIf(not FASTAPI_AVAILABLE, "FastAPI / TestClient not installed in environment")

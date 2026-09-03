@@ -57,7 +57,11 @@ function Dashboard() {
       } catch {
         alertsRes = await axios.get("http://localhost:5001/api/alerts?limit=5");
       }
-      setRecentAlerts(alertsRes.data?.alerts || []);
+      const rawAlerts = alertsRes.data?.alerts || [];
+      const sorted = [...rawAlerts].sort(
+        (a, b) => new Date(b.last_seen || b.first_seen).getTime() - new Date(a.last_seen || a.first_seen).getTime()
+      );
+      setRecentAlerts(sorted);
     } catch (e) {
       console.log("Alerts API offline:", e.message);
     }

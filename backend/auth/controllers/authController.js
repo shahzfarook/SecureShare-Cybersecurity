@@ -1,9 +1,28 @@
+const mongoose = require("mongoose");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { logLoginSuccess, logLoginFailure, logRegistration, logAccess } = require("../utils/auditLogger");
+const { logLoginSuccess, logLoginFailure, logRegistration } = require("../utils/auditLogger");
 
 const JWT_SECRET = process.env.JWT_SECRET || "secureshare_jwt_secret_dev_key_2026";
+
+// In-memory fallback database for standalone operation
+const inMemoryUsers = [
+    {
+        _id: "usr_admin_001",
+        name: "Security Administrator",
+        email: "admin@secureshare.local",
+        password: bcrypt.hashSync("Admin@123", 8),
+        role: "admin"
+    },
+    {
+        _id: "usr_analyst_002",
+        name: "SOC Analyst",
+        email: "analyst@secureshare.local",
+        password: bcrypt.hashSync("Analyst@123", 8),
+        role: "user"
+    }
+];
 
 // REGISTER
 const register = async (req, res) => {
@@ -17,7 +36,20 @@ const register = async (req, res) => {
             });
         }
 
-        const existingUser = await User.findOne({ email });
+        const isMongoConnected = mongoose.connection.readyState === 1;
+        let existingUser = null;
+
+        if (isMongoConnected) {
+            try {
+                existingUser = await User.findOne({ email });
+            } catch (err) {
+                console.warn("[Auth] Mongoose query failed, using in-memory store:", err.message);
+            }
+        }
+
+        if (!existingUser) {
+            existingUser = inMemoryUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+        }
 
         if (existingUser) {
             logRegistration(req, email, false, "User already exists");
@@ -27,18 +59,50 @@ const register = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        let user = null;
 
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-            role: role === "admin" ? "admin" : "user"
-        });
+        if (isMongoConnected) {
+            try {
+                user = await User.create({
+                    name,
+                    email,
+                    password: hashedPassword,
+                    role: role === "admin" ? "admin" : "user"
+                });
+            } catch (err) {
+                console.warn("[Auth] Mongoose create failed, using in-memory store:", err.message);
+            }
+        }
+
+        if (!user) {
+            user = {
+                _id: "usr_" + Date.now(),
+                name,
+                email,
+                password: hashedPassword,
+                role: role === "admin" ? "admin" : "user"
+            };
+            inMemoryUsers.push(user);
+        }
+
+        const token = jwt.sign(
+            {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                role: user.role
+            },
+            JWT_SECRET,
+            {
+                expiresIn: "1h"
+            }
+        );
 
         logRegistration(req, user, true);
 
         res.status(201).json({
             message: "Registration successful",
+            token,
             user: {
                 id: user._id,
                 name: user.name,
@@ -70,16 +134,27 @@ const login = async (req, res) => {
             });
         }
 
-        let user = await User.findOne({ email: userIdentifier });
-        if (!user && username) {
-            user = await User.findOne({ username: userIdentifier });
+        const isMongoConnected = mongoose.connection.readyState === 1;
+        let user = null;
+
+        if (isMongoConnected) {
+            try {
+                user = await User.findOne({ email: userIdentifier });
+                if (!user && username) {
+                    user = await User.findOne({ username: userIdentifier });
+                }
+            } catch (err) {
+                console.warn("[Auth] Mongoose query failed, using in-memory fallback:", err.message);
+            }
         }
-        if (!user && userIdentifier.includes("@")) {
-            user = await User.findOne({ email: userIdentifier });
-        }
+
         if (!user) {
-            // Check standalone fallback
-            user = User.getSeededUser && User.getSeededUser(userIdentifier);
+            const identLower = userIdentifier.toLowerCase();
+            user = inMemoryUsers.find(
+                (u) =>
+                    u.email.toLowerCase() === identLower ||
+                    u.email.toLowerCase().startsWith(identLower + "@")
+            );
         }
 
         if (!user) {
@@ -92,7 +167,7 @@ const login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            logLoginFailure(req, email, `Incorrect password for user '${email}'`);
+            logLoginFailure(req, userIdentifier, `Incorrect password for user '${userIdentifier}'`);
             return res.status(401).json({
                 message: "Invalid email or password"
             });

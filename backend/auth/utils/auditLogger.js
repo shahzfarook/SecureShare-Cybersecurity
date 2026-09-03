@@ -70,11 +70,16 @@ function logAccess({
         // Format: [2026-08-31T10:30:15Z] IP="127.0.0.1" METHOD="POST" ENDPOINT="/api/auth/login" STATUS=200 USER="user" MSG="Message" USER_AGENT="UA"
         const logLine = `[${timestamp}] IP="${clientIp}" METHOD="${httpMethod}" ENDPOINT="${requestEndpoint}" STATUS=${statusCode} USER="${cleanUser}" MSG="${cleanMsg}" USER_AGENT="${cleanUa}"\n`;
 
-        fs.appendFile(LOG_FILE, logLine, { encoding: "utf8" }, (err) => {
-            if (err) {
-                console.error("[AuditLogger] Failed to write log:", err.message);
+        const targetFile = process.env.AUDIT_LOG_FILE || LOG_FILE;
+        try {
+            const dir = path.dirname(targetFile);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
             }
-        });
+            fs.appendFileSync(targetFile, logLine, "utf8");
+        } catch (err) {
+            console.error("[AuditLogger] Failed to write log:", err.message);
+        }
 
         return logLine;
     } catch (err) {

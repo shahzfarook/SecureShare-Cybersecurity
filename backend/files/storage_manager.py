@@ -139,27 +139,33 @@ class FileStorageManager:
 
     def save_file(
         self,
-        file_content: bytes,
-        original_filename: str,
+        file_content: Optional[bytes] = None,
+        original_filename: Optional[str] = None,
         content_type: str = "application/octet-stream",
-        description: str = ""
+        description: str = "",
+        uploaded_by: str = "anonymous",
+        **kwargs
     ) -> Dict[str, Any]:
         """
         Encrypts file contents using AES-256-GCM, computes SHA-256 hash,
-        saves ciphertext to backend/files/storage/{file_id}.enc, and records metadata.
+        saves ciphertext to storage/{file_id}.enc, and records metadata.
         
         Returns:
             Dict containing file metadata and cryptographic hashes.
         """
-        if not file_content:
+        raw_bytes = file_content or kwargs.get("file_bytes")
+        raw_filename = original_filename or kwargs.get("filename") or "unnamed_file"
+        user = uploaded_by or kwargs.get("user") or "anonymous"
+
+        if not raw_bytes:
             raise StorageError("Cannot save empty file.")
 
-        sanitized_name = self._sanitize_filename(original_filename)
+        sanitized_name = self._sanitize_filename(raw_filename)
         file_id = str(uuid.uuid4())
         timestamp = datetime.now(timezone.utc).isoformat()
 
         # 1. Encrypt with AES-256-GCM and compute original SHA-256
-        encrypted_bytes, sha256_hash = self.encryptor.encrypt(plaintext=file_content)
+        encrypted_bytes, sha256_hash = self.encryptor.encrypt(plaintext=raw_bytes)
 
         # 2. Write ciphertext to disk
         enc_path = self._get_encrypted_filepath(file_id)
@@ -171,11 +177,12 @@ class FileStorageManager:
             "file_id": file_id,
             "filename": sanitized_name,
             "content_type": content_type or "application/octet-stream",
-            "file_size": len(file_content),
+            "file_size": len(raw_bytes),
             "encrypted_size": len(encrypted_bytes),
             "sha256_hash": sha256_hash,
             "encryption_algorithm": "AES-256-GCM",
             "uploaded_at": timestamp,
+            "uploaded_by": user,
             "description": description or "",
             "status": "active"
         }

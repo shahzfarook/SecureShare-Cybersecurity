@@ -76,15 +76,19 @@ function AttackLogs() {
     downloadAnchor.remove();
   };
 
-  const filteredAlerts = alerts.filter((a) => {
-    if (selectedSeverity === "ALL") return true;
-    return a.severity === selectedSeverity || a.alert_type === selectedSeverity;
-  });
+  const filteredAlerts = [...alerts]
+    .sort((a, b) => new Date(b.last_seen || b.first_seen).getTime() - new Date(a.last_seen || a.first_seen).getTime())
+    .filter((a) => {
+      if (selectedSeverity === "ALL") return true;
+      return a.severity === selectedSeverity || a.alert_type === selectedSeverity;
+    });
 
-  const filteredLogs = logs.filter((log) => {
-    if (!methodFilter) return true;
-    return log.method === methodFilter;
-  });
+  const filteredLogs = [...logs]
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .filter((log) => {
+      if (!methodFilter) return true;
+      return log.method === methodFilter;
+    });
 
   const criticalCount = alerts.filter((a) => a.severity === "CRITICAL").length;
   const highCount = alerts.filter((a) => a.severity === "HIGH").length;

@@ -176,7 +176,10 @@ class LogAnalyzer:
         ip_failed_logins: Dict[str, List[LogEntry]] = {}
         for entry in entries:
             if entry.is_failed_login() and entry.user not in ("", "anonymous", "unknown", "-"):
-                ip_failed_logins.setdefault(entry.ip, []).append(entry)
+                target_str = f"{entry.user} {entry.raw}"
+                is_sqli = any(pat.search(target_str) for pat in self.SQLI_PATTERNS)
+                if not is_sqli:
+                    ip_failed_logins.setdefault(entry.ip, []).append(entry)
 
         for ip, failed_list in ip_failed_logins.items():
             failed_list.sort(key=lambda x: x.timestamp)

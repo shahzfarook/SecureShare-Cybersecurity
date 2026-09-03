@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { FileIcon, RefreshIcon, UploadIcon, DownloadIcon, TrashIcon, ShieldIcon, CheckIcon, AlertIcon, CopyIcon } from "../components/Icons";
+import OtpDownloadModal from "../components/OtpDownloadModal";
 
 function MyFiles() {
   const [files, setFiles] = useState([]);
@@ -11,6 +12,7 @@ function MyFiles() {
   const [verifyingId, setVerifyingId] = useState(null);
   const [verificationResult, setVerificationResult] = useState({});
   const [activeModalData, setActiveModalData] = useState(null);
+  const [selectedDownloadFile, setSelectedDownloadFile] = useState(null);
   const [copiedHash, setCopiedHash] = useState(false);
   const [bannerNotice, setBannerNotice] = useState(null);
 
@@ -61,25 +63,35 @@ function MyFiles() {
   };
 
   const handleDelete = async (fileId) => {
-    if (!window.confirm("Are you sure you want to securely delete this encrypted file?")) return;
+    if (!window.confirm("Are you sure you want to securely delete this encrypted file from the vault?")) return;
 
     try {
       try {
         await axios.delete(`/api/files/${fileId}`);
       } catch {
-        await axios.delete(`http://localhost:8001/api/files/${fileId}`);
+        try {
+          await axios.delete(`http://localhost:8001/api/files/${fileId}`);
+        } catch {
+          await axios.post(`http://localhost:8001/api/files/delete/${fileId}`);
+        }
       }
-      setFiles(files.filter((f) => f.file_id !== fileId));
+      setFiles((prev) => prev.filter((f) => f.file_id !== fileId));
       if (activeModalData?.file_id === fileId) {
         setActiveModalData(null);
       }
+      setBannerNotice({
+        type: "success",
+        text: "Encrypted file deleted securely from vault.",
+      });
+      setTimeout(fetchFiles, 200);
     } catch (err) {
       alert("Delete failed: " + (err.response?.data?.detail || err.message));
     }
   };
 
-  const handleDownload = (fileId) => {
-    window.open(`/api/files/download/${fileId}`, "_blank");
+  const handleDownload = (file) => {
+    const targetFile = typeof file === "object" ? file : files.find((f) => f.file_id === file) || { file_id: file, filename: activeModalData?.filename || "vault_file" };
+    setSelectedDownloadFile(targetFile);
   };
 
   const handleCopyHash = (text) => {
@@ -507,6 +519,20 @@ function MyFiles() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 2FA Email OTP Download Verification Modal */}
+      {selectedDownloadFile && (
+        <OtpDownloadModal
+          file={selectedDownloadFile}
+          onClose={() => setSelectedDownloadFile(null)}
+          onSuccess={() => {
+            setBannerNotice({
+              type: "success",
+              text: `Decrypted and downloaded "${selectedDownloadFile.filename}" with verified 2FA OTP.`,
+            });
+          }}
+        />
       )}
     </div>
   );
