@@ -85,7 +85,7 @@ function SharedFiles() {
                       <input
                         type="text"
                         readOnly
-                        value={`${window.location.origin}/api/files/download/${file.file_id}`}
+                        value={getApiUrl(`/api/files/download/${file.file_id}`)}
                         className="cyber-input"
                         style={{ fontSize: "12px", padding: "8px 12px", color: "var(--accent-primary)", width: "300px", fontWeight: "600" }}
                         onClick={(e) => e.target.select()}

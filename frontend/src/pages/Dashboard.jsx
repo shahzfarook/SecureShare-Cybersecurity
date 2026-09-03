@@ -254,7 +254,7 @@ function Dashboard() {
                     </td>
                     <td style={{ textAlign: "right" }}>
                       <a
-                        href={`/api/files/download/${file.file_id}`}
+                        href={getApiUrl(`/api/files/download/${file.file_id}`)}
                         target="_blank"
                         rel="noreferrer"
                         className="btn-secondary"

