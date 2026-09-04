@@ -105,6 +105,15 @@ class DownloadOTPManager:
         Dispatches email to the recipient.
         """
         _load_env()
+        smtp_user = os.environ.get("SMTP_USER", "").strip()
+
+        # Resolve real delivery email (fallback to configured SMTP_USER for demo/local accounts)
+        target_email = str(recipient_email or "").strip()
+        if (not target_email or "@" not in target_email or target_email.endswith(".local")) and smtp_user and "@" in smtp_user:
+            target_email = smtp_user
+        elif not target_email or "@" not in target_email:
+            target_email = "admin@secureshare.local"
+
         # 6-digit numeric code (100000 to 999999)
         otp_code = str(secrets.randbelow(900000) + 100000)
         now = datetime.now(timezone.utc)
@@ -115,7 +124,7 @@ class DownloadOTPManager:
             "user_id": str(user_id or "").strip(),
             "filename": filename,
             "code": otp_code,
-            "recipient_email": str(recipient_email).strip(),
+            "recipient_email": target_email,
             "created_at": now.isoformat(),
             "expires_at": expires_at.isoformat(),
             "expires_at_dt": expires_at,
@@ -129,15 +138,15 @@ class DownloadOTPManager:
 
         # Dispatch Email (Real Gmail SMTP or formatted console fallback)
         email_sent = self._send_email(
-            recipient_email=str(recipient_email).strip(),
+            recipient_email=target_email,
             filename=filename,
             otp_code=otp_code
         )
 
         return {
             "file_id": file_id,
-            "recipient_email": self.mask_email(recipient_email),
-            "raw_email": recipient_email,
+            "recipient_email": self.mask_email(target_email),
+            "raw_email": target_email,
             "expires_in_seconds": self.EXPIRATION_SECONDS,
             "expires_at": expires_at.isoformat(),
             "email_sent": email_sent,

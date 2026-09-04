@@ -13,16 +13,28 @@ function forwardToService(targetPort) {
     return (req, res) => {
         const finalPath = req.originalUrl;
 
+        const headers = {
+            ...req.headers,
+            host: `127.0.0.1:${targetPort}`,
+            "x-forwarded-for": req.headers["x-forwarded-for"] || req.socket.remoteAddress
+        };
+
+        let bodyPayload = null;
+        if (req.body !== undefined && req.body !== null && typeof req.body === "object" && Object.keys(req.body).length > 0) {
+            bodyPayload = JSON.stringify(req.body);
+            headers["content-type"] = "application/json";
+            headers["content-length"] = Buffer.byteLength(bodyPayload);
+        } else if (typeof req.body === "string") {
+            bodyPayload = req.body;
+            headers["content-length"] = Buffer.byteLength(bodyPayload);
+        }
+
         const options = {
             hostname: "127.0.0.1",
             port: targetPort,
             path: finalPath,
             method: req.method,
-            headers: {
-                ...req.headers,
-                host: `127.0.0.1:${targetPort}`,
-                "x-forwarded-for": req.headers["x-forwarded-for"] || req.socket.remoteAddress
-            }
+            headers
         };
 
         const proxyReq = http.request(options, (proxyRes) => {
@@ -34,10 +46,8 @@ function forwardToService(targetPort) {
             handleFallback(targetPort, req, res, err);
         });
 
-        if (req.body && Object.keys(req.body).length > 0 && typeof req.body === "object") {
-            const bodyData = JSON.stringify(req.body);
-            proxyReq.setHeader("Content-Length", Buffer.byteLength(bodyData));
-            proxyReq.write(bodyData);
+        if (bodyPayload !== null) {
+            proxyReq.write(bodyPayload);
             proxyReq.end();
         } else {
             req.pipe(proxyReq, { end: true });

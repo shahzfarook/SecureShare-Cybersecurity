@@ -1,16 +1,29 @@
 /**
  * SecureShare API Configuration
- * Supports dynamic backend deployment URLs with Vercel and Render compatibility.
+ * Automatically detects local vs cloud deployment.
  */
+const isLocalhost =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" ||
+   window.location.hostname === "127.0.0.1" ||
+   window.location.hostname === "[::1]" ||
+   window.location.hostname.startsWith("192.168.") ||
+   window.location.hostname.startsWith("10.") ||
+   window.location.hostname === "");
+
+const defaultLocalUrl = "http://localhost:5000";
+const defaultCloudUrl = "https://secureshare-api-suph.onrender.com";
 
 export const API_BASE_URL = (
-  import.meta.env.VITE_API_URL || "https://secureshare-api-suph.onrender.com"
+  import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : (isLocalhost ? defaultLocalUrl : defaultCloudUrl)
 ).replace(/\/+$/, "");
 
 /**
  * Resolves full API endpoint URL
  * @param {string} endpoint - Relative path (e.g. "/api/files/list")
- * @returns {string} - Full URL (e.g. "https://secureshare-api-suph.onrender.com/api/files/list")
+ * @returns {string} - Full URL
  */
 export const getApiUrl = (endpoint) => {
   if (!endpoint) return API_BASE_URL;
